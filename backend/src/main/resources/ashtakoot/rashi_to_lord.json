@@ -1,0 +1,27 @@
+{
+  "verified": true,
+  "source": "Rashi lords are unambiguous. Natural friendship (Naisargika Maitri) is the standard Parashari table (high confidence). The scoring BANDS mapping relationship-pairs to points is PROVISIONAL — bands vary by source; confirm against Drik Panchang.",
+  "lord": {
+    "MESHA": "MARS", "VRISHABHA": "VENUS", "MITHUNA": "MERCURY", "KARKA": "MOON",
+    "SIMHA": "SUN", "KANYA": "MERCURY", "TULA": "VENUS", "VRISHCHIKA": "MARS",
+    "DHANU": "JUPITER", "MAKARA": "SATURN", "KUMBHA": "SATURN", "MEENA": "JUPITER"
+  },
+  "friendship": {
+    "SUN":     { "SUN": "FRIEND", "MOON": "FRIEND", "MARS": "FRIEND", "MERCURY": "NEUTRAL", "JUPITER": "FRIEND", "VENUS": "ENEMY", "SATURN": "ENEMY" },
+    "MOON":    { "SUN": "FRIEND", "MOON": "FRIEND", "MARS": "NEUTRAL", "MERCURY": "FRIEND", "JUPITER": "NEUTRAL", "VENUS": "NEUTRAL", "SATURN": "NEUTRAL" },
+    "MARS":    { "SUN": "FRIEND", "MOON": "FRIEND", "MARS": "FRIEND", "MERCURY": "ENEMY", "JUPITER": "FRIEND", "VENUS": "NEUTRAL", "SATURN": "NEUTRAL" },
+    "MERCURY": { "SUN": "FRIEND", "MOON": "ENEMY", "MARS": "NEUTRAL", "MERCURY": "FRIEND", "JUPITER": "NEUTRAL", "VENUS": "FRIEND", "SATURN": "NEUTRAL" },
+    "JUPITER": { "SUN": "FRIEND", "MOON": "FRIEND", "MARS": "FRIEND", "MERCURY": "ENEMY", "JUPITER": "FRIEND", "VENUS": "ENEMY", "SATURN": "NEUTRAL" },
+    "VENUS":   { "SUN": "ENEMY", "MOON": "ENEMY", "MARS": "NEUTRAL", "MERCURY": "FRIEND", "JUPITER": "NEUTRAL", "VENUS": "FRIEND", "SATURN": "FRIEND" },
+    "SATURN":  { "SUN": "ENEMY", "MOON": "ENEMY", "MARS": "ENEMY", "MERCURY": "FRIEND", "JUPITER": "NEUTRAL", "VENUS": "FRIEND", "SATURN": "FRIEND" }
+  },
+  "bandsProvisional": true,
+  "bands": {
+    "FRIEND_FRIEND": 5.0,
+    "FRIEND_NEUTRAL": 4.0,
+    "NEUTRAL_NEUTRAL": 3.0,
+    "FRIEND_ENEMY": 1.0,
+    "NEUTRAL_ENEMY": 0.5,
+    "ENEMY_ENEMY": 0.0
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "verified": false,
+  "source": "Bhakoot dosha pairs (2/12, 5/9, 6/8 counts) are standard and high-confidence. All-or-nothing 7 or 0. The CANCELLATION conditions are the tradition-variable part: the flags below encode a common convention and are PROVISIONAL pending Drik Panchang. Tracked in VERIFICATION.md.",
+  "points": 7,
+  "doshaPairs": [[2, 12], [5, 9], [6, 8]],
+  "cancellation": {
+    "_note": "Applied only when the dosha is present. Provisional Drik-Panchang-style conditions.",
+    "cancelIfSameLord": true,
+    "cancelIfLordsAreMutualFriends": true
+  }
+}

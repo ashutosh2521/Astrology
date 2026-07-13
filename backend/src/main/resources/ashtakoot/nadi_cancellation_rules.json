@@ -1,0 +1,10 @@
+{
+  "verified": false,
+  "source": "Nadi dosha = same Nadi (score 0). Cancellation convention is explicitly tradition-variable (spec decision #1). The flags below encode a common Drik-Panchang-style convention and are PROVISIONAL. Tracked in VERIFICATION.md.",
+  "cancellation": {
+    "_note": "Applied only when Nadi dosha is present (same Nadi). Any satisfied condition cancels the dosha.",
+    "cancelIfSameRashiDifferentNakshatra": true,
+    "cancelIfSameNakshatraDifferentPada": true,
+    "cancelIfDifferentNakshatraLord": false
+  }
+}

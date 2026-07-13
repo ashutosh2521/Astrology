@@ -1,0 +1,27 @@
+{
+  "verified": false,
+  "source": "Nakshatra->Yoni animal mapping is the standard table (13 animals x2 + Mongoose x1 = 27); high confidence on the mapping. The 14x14 matrix here encodes only same-yoni=4 and the 7 classic sworn-enemy pairs=0; all other cells are PLACEHOLDER neutral=2. The full friend(3)/neutral(2)/enemy(1) gradations MUST be filled from Drik Panchang. Tracked in VERIFICATION.md.",
+  "animal": {
+    "ASHWINI": "HORSE", "BHARANI": "ELEPHANT", "KRITTIKA": "SHEEP",
+    "ROHINI": "SERPENT", "MRIGASHIRA": "SERPENT", "ARDRA": "DOG",
+    "PUNARVASU": "CAT", "PUSHYA": "SHEEP", "ASHLESHA": "CAT",
+    "MAGHA": "RAT", "PURVA_PHALGUNI": "RAT", "UTTARA_PHALGUNI": "COW",
+    "HASTA": "BUFFALO", "CHITRA": "TIGER", "SWATI": "BUFFALO",
+    "VISHAKHA": "TIGER", "ANURADHA": "DEER", "JYESHTHA": "DEER",
+    "MULA": "DOG", "PURVA_ASHADHA": "MONKEY", "UTTARA_ASHADHA": "MONGOOSE",
+    "SHRAVANA": "MONKEY", "DHANISHTA": "LION", "SHATABHISHA": "HORSE",
+    "PURVA_BHADRAPADA": "LION", "UTTARA_BHADRAPADA": "COW", "REVATI": "ELEPHANT"
+  },
+  "sameScore": 4,
+  "defaultScore": 2,
+  "matrixProvisional": true,
+  "enemyPairs": [
+    ["CAT", "RAT"],
+    ["COW", "TIGER"],
+    ["ELEPHANT", "LION"],
+    ["HORSE", "BUFFALO"],
+    ["DOG", "DEER"],
+    ["SERPENT", "MONGOOSE"],
+    ["MONKEY", "SHEEP"]
+  ]
+}

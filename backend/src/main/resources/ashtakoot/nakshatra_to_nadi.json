@@ -1,0 +1,16 @@
+{
+  "verified": true,
+  "source": "Standard Nadi table (period-6 zigzag Aadi/Madhya/Antya/Antya/Madhya/Aadi). High confidence. Same Nadi => 0 (dosha), different => 8. Cancellation handled separately in nadi_cancellation_rules.json.",
+  "nadi": {
+    "ASHWINI": "AADI", "BHARANI": "MADHYA", "KRITTIKA": "ANTYA",
+    "ROHINI": "ANTYA", "MRIGASHIRA": "MADHYA", "ARDRA": "AADI",
+    "PUNARVASU": "AADI", "PUSHYA": "MADHYA", "ASHLESHA": "ANTYA",
+    "MAGHA": "ANTYA", "PURVA_PHALGUNI": "MADHYA", "UTTARA_PHALGUNI": "AADI",
+    "HASTA": "AADI", "CHITRA": "MADHYA", "SWATI": "ANTYA",
+    "VISHAKHA": "ANTYA", "ANURADHA": "MADHYA", "JYESHTHA": "AADI",
+    "MULA": "AADI", "PURVA_ASHADHA": "MADHYA", "UTTARA_ASHADHA": "ANTYA",
+    "SHRAVANA": "ANTYA", "DHANISHTA": "MADHYA", "SHATABHISHA": "AADI",
+    "PURVA_BHADRAPADA": "AADI", "UTTARA_BHADRAPADA": "MADHYA", "REVATI": "ANTYA"
+  },
+  "points": 8
+}

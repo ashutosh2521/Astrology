@@ -1,0 +1,18 @@
+{
+  "verified": true,
+  "source": "Standard elemental classification: water=Brahmin, fire=Kshatriya, earth=Vaishya, air=Shudra. High confidence, but confirm against Drik Panchang as part of the regression suite.",
+  "data": {
+    "MESHA": "KSHATRIYA",
+    "VRISHABHA": "VAISHYA",
+    "MITHUNA": "SHUDRA",
+    "KARKA": "BRAHMIN",
+    "SIMHA": "KSHATRIYA",
+    "KANYA": "VAISHYA",
+    "TULA": "SHUDRA",
+    "VRISHCHIKA": "BRAHMIN",
+    "DHANU": "KSHATRIYA",
+    "MAKARA": "VAISHYA",
+    "KUMBHA": "SHUDRA",
+    "MEENA": "BRAHMIN"
+  }
+}

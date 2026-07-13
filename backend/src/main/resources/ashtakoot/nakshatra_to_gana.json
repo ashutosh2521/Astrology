@@ -1,0 +1,21 @@
+{
+  "verified": true,
+  "source": "Standard Gana classification (9 Deva / 9 Manushya / 9 Rakshasa). Mapping high-confidence. The 3x3 matrix is stored row=boy, col=girl so it CAN be directional; values below are the common symmetric convention and are marked PROVISIONAL — a directional variant exists; confirm against Drik Panchang.",
+  "gana": {
+    "ASHWINI": "DEVA", "BHARANI": "MANUSHYA", "KRITTIKA": "RAKSHASA",
+    "ROHINI": "MANUSHYA", "MRIGASHIRA": "DEVA", "ARDRA": "MANUSHYA",
+    "PUNARVASU": "DEVA", "PUSHYA": "DEVA", "ASHLESHA": "RAKSHASA",
+    "MAGHA": "RAKSHASA", "PURVA_PHALGUNI": "MANUSHYA", "UTTARA_PHALGUNI": "MANUSHYA",
+    "HASTA": "DEVA", "CHITRA": "RAKSHASA", "SWATI": "DEVA",
+    "VISHAKHA": "RAKSHASA", "ANURADHA": "DEVA", "JYESHTHA": "RAKSHASA",
+    "MULA": "RAKSHASA", "PURVA_ASHADHA": "MANUSHYA", "UTTARA_ASHADHA": "MANUSHYA",
+    "SHRAVANA": "DEVA", "DHANISHTA": "RAKSHASA", "SHATABHISHA": "RAKSHASA",
+    "PURVA_BHADRAPADA": "MANUSHYA", "UTTARA_BHADRAPADA": "MANUSHYA", "REVATI": "DEVA"
+  },
+  "matrixProvisional": true,
+  "matrix": {
+    "DEVA":     { "DEVA": 6, "MANUSHYA": 5, "RAKSHASA": 1 },
+    "MANUSHYA": { "DEVA": 5, "MANUSHYA": 6, "RAKSHASA": 0 },
+    "RAKSHASA": { "DEVA": 1, "MANUSHYA": 0, "RAKSHASA": 6 }
+  }
+}

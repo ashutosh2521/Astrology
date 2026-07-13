@@ -1,0 +1,26 @@
+{
+  "verified": false,
+  "source": "PROVISIONAL. Vashya group assignment uses a whole-sign simplification (classically Dhanu/Makara split by half-sign). The 5x5 matrix here is a PLACEHOLDER (diagonal=2 full, off-diagonal=1) — the real matrix has 0 / 0.5 / 1 / 2 cells that MUST be filled from Drik Panchang before this koota is trusted. Tracked in VERIFICATION.md.",
+  "group": {
+    "MESHA": "CHATUSHPADA",
+    "VRISHABHA": "CHATUSHPADA",
+    "MITHUNA": "MANAVA",
+    "KARKA": "JALACHARA",
+    "SIMHA": "VANACHARA",
+    "KANYA": "MANAVA",
+    "TULA": "MANAVA",
+    "VRISHCHIKA": "KEETA",
+    "DHANU": "MANAVA",
+    "MAKARA": "JALACHARA",
+    "KUMBHA": "MANAVA",
+    "MEENA": "JALACHARA"
+  },
+  "matrixProvisional": true,
+  "matrix": {
+    "CHATUSHPADA": { "CHATUSHPADA": 2, "MANAVA": 1, "JALACHARA": 1, "VANACHARA": 1, "KEETA": 1 },
+    "MANAVA":      { "CHATUSHPADA": 1, "MANAVA": 2, "JALACHARA": 1, "VANACHARA": 1, "KEETA": 1 },
+    "JALACHARA":   { "CHATUSHPADA": 1, "MANAVA": 1, "JALACHARA": 2, "VANACHARA": 1, "KEETA": 1 },
+    "VANACHARA":   { "CHATUSHPADA": 1, "MANAVA": 1, "JALACHARA": 1, "VANACHARA": 2, "KEETA": 1 },
+    "KEETA":       { "CHATUSHPADA": 1, "MANAVA": 1, "JALACHARA": 1, "VANACHARA": 1, "KEETA": 2 }
+  }
+}
