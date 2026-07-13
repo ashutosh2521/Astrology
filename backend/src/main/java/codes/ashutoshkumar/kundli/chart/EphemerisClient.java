@@ -46,16 +46,27 @@ public class EphemerisClient {
     ) {}
 
     public ComputedChart computeChart(Instant utc, double latitude, double longitude) {
+        // Pre-serialize so the request goes out with a Content-Length body (fixed-length
+        // HTTP/1.1). Streaming converters produce Transfer-Encoding: chunked, which —
+        // combined with the JDK client's h2c upgrade attempt — breaks some uvicorn
+        // versions into dropping the body entirely (422 "body missing").
+        String payload;
+        try {
+            payload = mapper.writeValueAsString(Map.of(
+                    "utc", utc.toString(),
+                    "latitude", latitude,
+                    "longitude", longitude,
+                    "ayanamsa", AYANAMSA));
+        } catch (Exception e) {
+            throw new EphemerisUnavailableException("Could not serialize chart request", e);
+        }
+
         String raw;
         try {
             raw = rest.post()
                     .uri("/chart")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(
-                            "utc", utc.toString(),
-                            "latitude", latitude,
-                            "longitude", longitude,
-                            "ayanamsa", AYANAMSA))
+                    .body(payload)
                     .retrieve()
                     .body(String.class);
         } catch (RestClientException e) {

@@ -1,9 +1,11 @@
 package codes.ashutoshkumar.kundli.config;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootEngine;
+import java.time.Duration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 @Configuration
@@ -19,8 +21,21 @@ public class AppConfig {
         return AshtakootEngine.create();
     }
 
+    /**
+     * Client for the internal ephemeris service. Deliberately uses the buffering
+     * HttpURLConnection factory: plain HTTP/1.1 with a Content-Length body. The
+     * default JDK HttpClient attempts an h2c upgrade ({@code Upgrade: h2c} +
+     * chunked body) on cleartext HTTP, which uvicorn doesn't support — some
+     * uvicorn/h11 versions then drop the body and FastAPI 422s with "body missing".
+     */
     @Bean
     public RestClient ephemerisRestClient(KundliProperties props) {
-        return RestClient.builder().baseUrl(props.ephemeris().baseUrl()).build();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(20));
+        return RestClient.builder()
+                .baseUrl(props.ephemeris().baseUrl())
+                .requestFactory(factory)
+                .build();
     }
 }
