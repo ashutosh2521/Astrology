@@ -1,4 +1,5 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { I18nService } from '../core/i18n.service';
 
 /**
  * Hero score: a large number with a slim gold progress ring.
@@ -11,7 +12,7 @@ import { Component, computed, input } from '@angular/core';
   standalone: true,
   template: `
     <div class="ring" role="img"
-         [attr.aria-label]="'Score ' + points() + ' of ' + max() + ' points'">
+         [attr.aria-label]="i18n.t('score.aria', { points: points(), max: max() })">
       <svg [attr.width]="size" [attr.height]="size" [attr.viewBox]="'0 0 ' + size + ' ' + size">
         <circle class="ring__track"
                 [attr.cx]="c" [attr.cy]="c" [attr.r]="r"
@@ -25,7 +26,7 @@ import { Component, computed, input } from '@angular/core';
       </svg>
       <div class="ring__center">
         <div class="ring__points mono">{{ points() }}</div>
-        <div class="ring__max">of {{ max() }}</div>
+        <div class="ring__max">{{ i18n.t('score.of', { max: max() }) }}</div>
       </div>
     </div>
   `,
@@ -58,6 +59,7 @@ import { Component, computed, input } from '@angular/core';
   `],
 })
 export class ScoreRingComponent {
+  readonly i18n = inject(I18nService);
   readonly points = input.required<number>();
   readonly max = input.required<number>();
 

@@ -1,5 +1,6 @@
-import { Component, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { KootaScore } from '../core/models';
+import { I18nService } from '../core/i18n.service';
 
 /**
  * Per-koota breakdown: thin single-hue bars (magnitude vs. max) on a muted
@@ -14,7 +15,7 @@ import { KootaScore } from '../core/models';
       @for (k of kootas(); track k.koota) {
         <li class="row" [attr.tabindex]="0">
           <div class="row__head">
-            <span class="row__name">{{ k.koota }}</span>
+            <span class="row__name">{{ i18n.koota(k.koota) }}</span>
             <span class="row__pts mono">
               {{ k.points }}<span class="row__ptsmax"> / {{ k.maxPoints }}</span>
             </span>
@@ -75,5 +76,6 @@ import { KootaScore } from '../core/models';
   `],
 })
 export class KootaBarsComponent {
+  readonly i18n = inject(I18nService);
   readonly kootas = input.required<KootaScore[]>();
 }

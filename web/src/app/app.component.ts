@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ApiService } from './core/api.service';
+import { I18nService } from './core/i18n.service';
 
 @Component({
   selector: 'app-root',
@@ -12,11 +13,19 @@ import { ApiService } from './core/api.service';
         <a routerLink="/" class="brand">
           <span class="brand__mark">✦</span>
           <span class="brand__name">Kundli</span>
-          <span class="brand__sub">Vedic Compatibility</span>
+          <span class="brand__sub">{{ i18n.t('brand.sub') }}</span>
         </a>
         <nav class="nav">
-          <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Charts</a>
-          <a routerLink="/match" routerLinkActive="is-active">Match</a>
+          <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">{{ i18n.t('nav.charts') }}</a>
+          <a routerLink="/match" routerLinkActive="is-active">{{ i18n.t('nav.match') }}</a>
+          <div class="langs" role="group" aria-label="Language / भाषा">
+            <button type="button" lang="hi"
+                    [class.is-active]="i18n.lang() === 'hi'"
+                    (click)="i18n.setLang('hi')">हिंदी</button>
+            <button type="button" lang="en"
+                    [class.is-active]="i18n.lang() === 'en'"
+                    (click)="i18n.setLang('en')">English</button>
+          </div>
         </nav>
       </header>
 
@@ -25,9 +34,9 @@ import { ApiService } from './core/api.service';
       <footer class="footer">
         <span class="health" [class.health--down]="!healthy()">
           <span class="health__dot" aria-hidden="true"></span>
-          {{ healthy() ? 'Ephemeris: full precision' : 'Ephemeris: unavailable' }}
+          {{ healthy() ? i18n.t('health.up') : i18n.t('health.down') }}
         </span>
-        <span class="muted small">Lahiri ayanamsa · Swiss Ephemeris</span>
+        <span class="muted small">{{ i18n.t('footer.note') }}</span>
       </footer>
     </div>
   `,
@@ -62,7 +71,25 @@ import { ApiService } from './core/api.service';
       text-transform: uppercase;
       color: var(--ink-3);
     }
-    .nav { display: flex; gap: 6px; }
+    .nav { display: flex; gap: 6px; align-items: center; }
+    .langs {
+      display: inline-flex;
+      margin-left: 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .langs button {
+      background: none;
+      border: none;
+      padding: 7px 13px;
+      font: 600 12.5px/1 var(--font-body);
+      color: var(--ink-3);
+      cursor: pointer;
+      transition: color .12s ease, background .12s ease;
+    }
+    .langs button.is-active { color: var(--gold-text); background: var(--gold-soft); }
+    .langs button:hover:not(.is-active) { color: var(--ink); }
     .nav a {
       color: var(--ink-2);
       font-weight: 600;
@@ -105,9 +132,11 @@ import { ApiService } from './core/api.service';
 })
 export class AppComponent implements OnInit {
   private readonly api = inject(ApiService);
+  readonly i18n = inject(I18nService);
   readonly healthy = signal(true);
 
   ngOnInit(): void {
+    document.documentElement.lang = this.i18n.lang();
     this.api.health().subscribe({
       next: h => this.healthy.set(h.ephemeris === 'UP'),
       error: () => this.healthy.set(false),

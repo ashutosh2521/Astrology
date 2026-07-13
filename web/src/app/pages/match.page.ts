@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { ChartResponse, MatchResponse } from '../core/models';
+import { I18nService } from '../core/i18n.service';
 import { ScoreRingComponent } from '../components/score-ring.component';
 import { KootaBarsComponent } from '../components/koota-bars.component';
 import { DoshaCardComponent } from '../components/dosha-card.component';
@@ -13,40 +14,44 @@ import { DoshaCardComponent } from '../components/dosha-card.component';
   imports: [FormsModule, RouterLink, ScoreRingComponent, KootaBarsComponent, DoshaCardComponent],
   template: `
     <section class="hero">
-      <h1>Match</h1>
-      <p class="muted">Ashtakoot — the eight-fold compatibility of two Moon charts, out of 36 points.</p>
+      <h1>{{ i18n.t('match.title') }}</h1>
+      <p class="muted">{{ i18n.t('match.intro') }}</p>
     </section>
 
     @if (charts().length < 2 && !loading()) {
       <div class="card--inset empty">
         <div class="empty__mark" aria-hidden="true">✦</div>
-        <p class="muted">You need at least two charts to run a match.</p>
-        <a routerLink="/" class="btn btn--ghost">Create charts →</a>
+        <p class="muted">{{ i18n.t('match.needTwo') }}</p>
+        <a routerLink="/" class="btn btn--ghost">{{ i18n.t('match.createCharts') }}</a>
       </div>
     } @else {
       <div class="picker card">
         <div class="picker__side">
           <div class="field">
-            <label for="boy">Boy’s chart</label>
+            <label for="boy">{{ i18n.t('match.boy') }}</label>
             <select id="boy" name="boy" [(ngModel)]="boyId">
-              <option [ngValue]="null" disabled>Select…</option>
+              <option [ngValue]="null" disabled>{{ i18n.t('match.select') }}</option>
               @for (c of charts(); track c.id) {
-                <option [ngValue]="c.id">{{ c.label }} — ☾ {{ c.moonRashi }}, {{ c.moonNakshatra }}</option>
+                <option [ngValue]="c.id">
+                  {{ c.label }} — ☾ {{ i18n.rashi(c.moonRashi) }}, {{ i18n.nakshatra(c.moonNakshatra) }}
+                </option>
               }
             </select>
           </div>
         </div>
 
         <button class="picker__swap btn btn--ghost" type="button" (click)="swap()"
-                aria-label="Swap boy and girl charts" title="Swap">⇄</button>
+                [attr.aria-label]="i18n.t('match.swap')" [title]="i18n.t('match.swap')">⇄</button>
 
         <div class="picker__side">
           <div class="field">
-            <label for="girl">Girl’s chart</label>
+            <label for="girl">{{ i18n.t('match.girl') }}</label>
             <select id="girl" name="girl" [(ngModel)]="girlId">
-              <option [ngValue]="null" disabled>Select…</option>
+              <option [ngValue]="null" disabled>{{ i18n.t('match.select') }}</option>
               @for (c of charts(); track c.id) {
-                <option [ngValue]="c.id">{{ c.label }} — ☾ {{ c.moonRashi }}, {{ c.moonNakshatra }}</option>
+                <option [ngValue]="c.id">
+                  {{ c.label }} — ☾ {{ i18n.rashi(c.moonRashi) }}, {{ i18n.nakshatra(c.moonNakshatra) }}
+                </option>
               }
             </select>
           </div>
@@ -54,14 +59,14 @@ import { DoshaCardComponent } from '../components/dosha-card.component';
 
         <button class="btn btn--primary picker__go" type="button"
                 (click)="run()" [disabled]="!canRun() || matching()">
-          {{ matching() ? 'Matching…' : 'Match ✦' }}
+          {{ matching() ? i18n.t('match.running') : i18n.t('match.run') }}
         </button>
       </div>
 
       @if (error()) {
         <div class="banner banner--bad fade-in" role="alert">
           <span aria-hidden="true">✕</span>
-          <div>{{ error() }}</div>
+          <div>{{ i18n.t(error()!) }}</div>
         </div>
       }
 
@@ -73,7 +78,7 @@ import { DoshaCardComponent } from '../components/dosha-card.component';
               <div class="result__names">
                 {{ m.boyLabel }} <span class="muted">&</span> {{ m.girlLabel }}
               </div>
-              <p class="result__text">{{ m.result.verdict }}</p>
+              <p class="result__text">{{ i18n.verdict(m.result) }}</p>
               @if (chartWarnings().length > 0) {
                 <div class="banner banner--warn small">
                   <span aria-hidden="true">◭</span>
@@ -82,17 +87,17 @@ import { DoshaCardComponent } from '../components/dosha-card.component';
                   </div>
                 </div>
               }
-              <p class="muted small">Rule set: {{ m.rulesVersion }}</p>
+              <p class="muted small">{{ i18n.t('match.rules') }}: {{ m.rulesVersion }}</p>
             </div>
           </div>
 
           <div class="result__grid">
             <div class="card">
-              <h2 class="section-title">Koota breakdown</h2>
+              <h2 class="section-title">{{ i18n.t('match.kootas') }}</h2>
               <app-koota-bars [kootas]="m.result.kootas" />
             </div>
             <div class="doshas">
-              <h2 class="section-title">Doshas</h2>
+              <h2 class="section-title">{{ i18n.t('match.doshas') }}</h2>
               @for (d of m.result.doshas; track d.name) {
                 <app-dosha-card [dosha]="d" />
               }
@@ -153,6 +158,7 @@ import { DoshaCardComponent } from '../components/dosha-card.component';
 })
 export class MatchPage implements OnInit {
   private readonly api = inject(ApiService);
+  readonly i18n = inject(I18nService);
 
   readonly charts = signal<ChartResponse[]>([]);
   readonly loading = signal(true);
@@ -183,7 +189,8 @@ export class MatchPage implements OnInit {
   ngOnInit(): void {
     this.api.listCharts().subscribe({
       next: cs => { this.charts.set(cs); this.loading.set(false); },
-      error: () => { this.error.set('Could not load charts.'); this.loading.set(false); },
+      // Error signals hold message keys; t() passes unknown (backend) text through.
+      error: () => { this.error.set('match.err.load'); this.loading.set(false); },
     });
   }
 
@@ -194,7 +201,7 @@ export class MatchPage implements OnInit {
   run(): void {
     if (this.boyId == null || this.girlId == null) return;
     if (this.boyId === this.girlId) {
-      this.error.set('Pick two different charts.');
+      this.error.set('match.err.same');
       return;
     }
     this.matching.set(true);
@@ -203,7 +210,7 @@ export class MatchPage implements OnInit {
       next: m => { this.match.set(m); this.matching.set(false); },
       error: err => {
         this.matching.set(false);
-        this.error.set(err?.error?.error ?? 'Match failed.');
+        this.error.set(err?.error?.error ?? 'match.err.failed');
       },
     });
   }

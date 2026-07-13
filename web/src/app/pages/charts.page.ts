@@ -1,82 +1,93 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { ChartResponse } from '../core/models';
+import { City } from '../core/cities';
+import { I18nService } from '../core/i18n.service';
+import { PlacePickerComponent } from '../components/place-picker.component';
 
 @Component({
   selector: 'app-charts-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, PlacePickerComponent],
   template: `
     <section class="hero">
-      <h1>Birth Charts</h1>
-      <p class="muted">
-        Enter the exact birth time — to the minute, seconds if known. The Moon moves
-        ~13° a day, so near a Nakshatra boundary even a small error can change the match.
-      </p>
+      <h1>{{ i18n.t('charts.title') }}</h1>
+      <p class="muted">{{ i18n.t('charts.intro') }}</p>
     </section>
 
     @if (error()) {
       <div class="banner banner--bad fade-in" role="alert">
         <span aria-hidden="true">✕</span>
-        <div>{{ error() }}</div>
+        <div>{{ i18n.t(error()!) }}</div>
       </div>
     }
 
     <div class="layout">
       <!-- ————— Create form ————— -->
       <form class="card form" (ngSubmit)="create()" #f="ngForm">
-        <h2 class="form__title">New chart</h2>
+        <h2 class="form__title">{{ i18n.t('charts.form.title') }}</h2>
 
         <div class="field">
-          <label for="label">Name</label>
+          <label for="label">{{ i18n.t('charts.name') }}</label>
           <input id="label" name="label" [(ngModel)]="form.label" required
-                 placeholder="Person’s name" autocomplete="off" />
+                 [placeholder]="i18n.t('charts.name.ph')" autocomplete="off" />
         </div>
 
         <div class="grid-2">
           <div class="field">
-            <label for="date">Birth date</label>
+            <label for="date">{{ i18n.t('charts.date') }}</label>
             <input id="date" name="date" type="date" [(ngModel)]="form.date" required />
           </div>
           <div class="field">
-            <label for="time">Birth time</label>
-            <input id="time" name="time" type="time" step="1" [(ngModel)]="form.time" required />
-            <span class="hint">hh:mm:ss — seconds if known</span>
+            <label for="time">{{ i18n.t('charts.time') }}</label>
+            <input id="time" name="time" type="time" [(ngModel)]="form.time" required />
+            <span class="hint">{{ i18n.t('charts.time.hint') }}</span>
           </div>
         </div>
 
         <div class="field">
-          <label for="tz">Timezone of birthplace</label>
-          <select id="tz" name="tz" [(ngModel)]="form.timezone" required>
-            @for (z of timezones; track z) {
-              <option [value]="z">{{ z }}</option>
-            }
-          </select>
+          <label for="place">{{ i18n.t('charts.place') }}</label>
+          <app-place-picker inputId="place" (changed)="onCity($event)" />
         </div>
 
-        <div class="field">
-          <label for="place">Place of birth</label>
-          <input id="place" name="place" [(ngModel)]="form.placeName"
-                 placeholder="City, Country" autocomplete="off" />
-        </div>
+        <button type="button" class="manual-toggle" (click)="manual.set(!manual())">
+          {{ manual() ? i18n.t('charts.manual.hide') : i18n.t('charts.manual.show') }}
+        </button>
 
-        <div class="grid-2">
-          <div class="field">
-            <label for="lat">Latitude</label>
-            <input id="lat" name="lat" type="number" step="0.0001" min="-90" max="90"
-                   [(ngModel)]="form.latitude" required placeholder="28.6139" />
+        @if (manual()) {
+          <div class="manual fade-in">
+            <div class="field">
+              <label for="placeName">{{ i18n.t('charts.manual.place') }}</label>
+              <input id="placeName" name="placeName" [(ngModel)]="form.placeName"
+                     [placeholder]="i18n.t('charts.manual.place.ph')" autocomplete="off" />
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="lat">{{ i18n.t('charts.lat') }}</label>
+                <input id="lat" name="lat" type="number" step="0.0001" min="-90" max="90"
+                       [(ngModel)]="form.latitude" placeholder="25.5941" />
+              </div>
+              <div class="field">
+                <label for="lon">{{ i18n.t('charts.lon') }}</label>
+                <input id="lon" name="lon" type="number" step="0.0001" min="-180" max="180"
+                       [(ngModel)]="form.longitude" placeholder="85.1376" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="tz">{{ i18n.t('charts.tz') }}</label>
+              <select id="tz" name="tz" [(ngModel)]="form.timezone">
+                @for (z of timezones; track z) {
+                  <option [value]="z">{{ z }}</option>
+                }
+              </select>
+            </div>
           </div>
-          <div class="field">
-            <label for="lon">Longitude</label>
-            <input id="lon" name="lon" type="number" step="0.0001" min="-180" max="180"
-                   [(ngModel)]="form.longitude" required placeholder="77.2090" />
-          </div>
-        </div>
+        }
 
-        <button class="btn btn--primary" type="submit" [disabled]="f.invalid || saving()">
-          {{ saving() ? 'Computing chart…' : 'Compute chart ✦' }}
+        <button class="btn btn--primary" type="submit" [disabled]="!canSubmit(f.invalid) || saving()">
+          {{ saving() ? i18n.t('charts.submitting') : i18n.t('charts.submit') }}
         </button>
       </form>
 
@@ -89,7 +100,7 @@ import { ChartResponse } from '../core/models';
         } @else if (charts().length === 0) {
           <div class="card--inset empty">
             <div class="empty__mark" aria-hidden="true">✦</div>
-            <p class="muted">No charts yet. Create the first one to begin matching.</p>
+            <p class="muted">{{ i18n.t('charts.empty') }}</p>
           </div>
         } @else {
           @for (c of charts(); track c.id) {
@@ -97,14 +108,19 @@ import { ChartResponse } from '../core/models';
               <header class="chart__head">
                 <h3 class="chart__name">{{ c.label }}</h3>
                 <button class="btn btn--danger-ghost" type="button"
-                        (click)="remove(c)" [attr.aria-label]="'Delete chart for ' + c.label">
-                  Delete
+                        (click)="remove(c)"
+                        [attr.aria-label]="i18n.t('charts.deleteAria') + ' ' + c.label">
+                  {{ i18n.t('charts.delete') }}
                 </button>
               </header>
 
               <div class="chart__badges">
-                <span class="chip chip--gold" title="Moon sign">☾ {{ c.moonRashi }}</span>
-                <span class="chip" title="Moon nakshatra & pada">{{ c.moonNakshatra }} · Pada {{ c.moonPada }}</span>
+                <span class="chip chip--gold" [title]="i18n.t('charts.moonSign')">
+                  ☾ {{ i18n.rashi(c.moonRashi) }}
+                </span>
+                <span class="chip" [title]="i18n.t('charts.moonNak')">
+                  {{ i18n.nakshatra(c.moonNakshatra) }} · {{ i18n.t('charts.pada') }} {{ c.moonPada }}
+                </span>
               </div>
 
               <p class="chart__meta muted small">
@@ -120,7 +136,7 @@ import { ChartResponse } from '../core/models';
               }
             </article>
           }
-          <a routerLink="/match" class="btn btn--ghost list__cta">Run a match →</a>
+          <a routerLink="/match" class="btn btn--ghost list__cta">{{ i18n.t('charts.cta') }}</a>
         }
       </div>
     </div>
@@ -131,7 +147,7 @@ import { ChartResponse } from '../core/models';
 
     .layout {
       display: grid;
-      grid-template-columns: 380px 1fr;
+      grid-template-columns: 400px 1fr;
       gap: 26px;
       align-items: start;
     }
@@ -141,6 +157,19 @@ import { ChartResponse } from '../core/models';
     .form__title { font-size: 20px; margin: 0; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form .btn { margin-top: 4px; justify-content: center; }
+
+    .manual-toggle {
+      align-self: flex-start;
+      background: none;
+      border: none;
+      padding: 0;
+      font: 500 13px/1.4 var(--font-body);
+      color: var(--gold-text);
+      cursor: pointer;
+      text-decoration: underline dotted;
+    }
+    .manual { display: flex; flex-direction: column; gap: 12px;
+              border-top: 1px dashed var(--border); padding-top: 14px; }
 
     .list { display: flex; flex-direction: column; gap: 16px; }
     .list__cta { align-self: flex-end; }
@@ -158,11 +187,16 @@ import { ChartResponse } from '../core/models';
 })
 export class ChartsPage implements OnInit {
   private readonly api = inject(ApiService);
+  readonly i18n = inject(I18nService);
+
+  private readonly picker = viewChild(PlacePickerComponent);
 
   readonly charts = signal<ChartResponse[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
+  /** Manual location entry — the escape hatch when the city isn't bundled. */
+  readonly manual = signal(false);
 
   /** Full IANA list from the platform when available; sensible fallback otherwise. */
   readonly timezones: string[] = (() => {
@@ -171,6 +205,8 @@ export class ChartsPage implements OnInit {
     // India first — the primary audience.
     return ['Asia/Kolkata', ...list.filter(z => z !== 'Asia/Kolkata')];
   })();
+
+  private city: City | null = null;
 
   form = {
     label: '',
@@ -186,10 +222,29 @@ export class ChartsPage implements OnInit {
     this.refresh();
   }
 
+  onCity(c: City | null): void {
+    this.city = c;
+    if (c) {
+      this.form.latitude = c.lat;
+      this.form.longitude = c.lon;
+      this.form.timezone = c.tz;
+      this.form.placeName = `${c.name}, ${c.region}`;
+    }
+  }
+
+  canSubmit(formInvalid: boolean | null): boolean {
+    if (formInvalid) return false;
+    const hasLocation = this.city != null
+      || (this.form.latitude != null && this.form.longitude != null);
+    return hasLocation;
+  }
+
   refresh(): void {
     this.api.listCharts().subscribe({
       next: cs => { this.charts.set(cs.slice().reverse()); this.loading.set(false); },
-      error: () => { this.error.set('Could not load charts — is the backend running?'); this.loading.set(false); },
+      // Error signals hold message *keys* (or raw backend text, which t() passes
+      // through untouched) so banners re-render when the language changes.
+      error: () => { this.error.set('charts.err.load'); this.loading.set(false); },
     });
   }
 
@@ -211,20 +266,25 @@ export class ChartsPage implements OnInit {
       next: c => {
         this.charts.update(cs => [c, ...cs]);
         this.saving.set(false);
-        this.form = { ...this.form, label: '', date: '', time: '', placeName: '' };
+        this.form = {
+          ...this.form,
+          label: '', date: '', time: '', placeName: '', latitude: null, longitude: null,
+        };
+        this.city = null;
+        this.picker()?.clear();
       },
       error: err => {
         this.saving.set(false);
-        this.error.set(err?.error?.error ?? 'Chart computation failed.');
+        this.error.set(err?.error?.error ?? 'charts.err.compute');
       },
     });
   }
 
   remove(c: ChartResponse): void {
-    if (!confirm(`Delete the chart for “${c.label}”?`)) return;
+    if (!confirm(this.i18n.t('charts.deleteConfirm', { name: c.label }))) return;
     this.api.deleteChart(c.id).subscribe({
       next: () => this.charts.update(cs => cs.filter(x => x.id !== c.id)),
-      error: () => this.error.set('Delete failed.'),
+      error: () => this.error.set('charts.err.delete'),
     });
   }
 }

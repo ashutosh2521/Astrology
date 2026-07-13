@@ -1,5 +1,6 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { DoshaStatus } from '../core/models';
+import { I18nService } from '../core/i18n.service';
 
 /**
  * Dosha status card. Three states, each carrying icon + label + reason —
@@ -16,7 +17,7 @@ import { DoshaStatus } from '../core/models';
       <span class="dosha__icon" aria-hidden="true">{{ icon() }}</span>
       <div>
         <div class="dosha__title">{{ title() }}</div>
-        <div class="dosha__reason">{{ dosha().reason }}</div>
+        <div class="dosha__reason">{{ i18n.doshaReason(dosha().reason) }}</div>
       </div>
     </div>
   `,
@@ -46,6 +47,7 @@ import { DoshaStatus } from '../core/models';
   `],
 })
 export class DoshaCardComponent {
+  readonly i18n = inject(I18nService);
   readonly dosha = input.required<DoshaStatus>();
 
   readonly kind = computed(() => {
@@ -57,9 +59,12 @@ export class DoshaCardComponent {
   readonly icon = computed(() =>
     ({ good: '✓', warn: '◐', bad: '✕' })[this.kind()]);
 
-  readonly title = computed(() => {
+  title(): string {
     const d = this.dosha();
-    if (!d.present) return `No ${d.name} dosha`;
-    return d.cancelled ? `${d.name} dosha cancelled` : `${d.name} dosha applies`;
-  });
+    const name = this.i18n.doshaName(d.name);
+    if (!d.present) return this.i18n.t('dosha.none', { name });
+    return d.cancelled
+      ? this.i18n.t('dosha.cancelled', { name })
+      : this.i18n.t('dosha.applies', { name });
+  }
 }
