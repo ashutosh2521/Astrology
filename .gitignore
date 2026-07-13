@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Swiss Ephemeris data files (downloaded at deploy time, not committed — large binaries)
+ephemeris-service/ephe/*.se1
+
+# Java / Spring Boot
+target/
+*.class
+.gradle/
+build/
+
+# Node / Angular / Ionic
+node_modules/
+dist/
+.angular/
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Env / secrets
+.env
+*.local
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
