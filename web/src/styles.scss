@@ -1,0 +1,252 @@
+/* ============================================================
+   Kundli — celestial design system
+   Dark, quiet-luxury look: deep indigo night surfaces, ivory ink,
+   muted gold accents. Data colors are palette-validated (CVD +
+   contrast) against --surface; status is never conveyed by color
+   alone (icons + labels accompany every status chip).
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --bg: #0f1018;
+  --surface: #14151f;
+  --surface-2: #1b1d2a;
+  --surface-3: #232637;
+  --border: #262a3d;
+  --border-soft: #1e2233;
+
+  /* Ink */
+  --ink: #eceef6;
+  --ink-2: #a8adc4;
+  --ink-3: #767c9b;
+
+  /* Accent (gold) — mark tone is validated for data; text tone passes 4.5:1 */
+  --gold: #b8862d;
+  --gold-text: #d9ab52;
+  --gold-soft: rgba(184, 134, 45, 0.14);
+
+  /* Status (validated on --surface; always paired with icon + label) */
+  --good: #3aa261;
+  --good-soft: rgba(58, 162, 97, 0.13);
+  --warn: #b3861c;
+  --warn-soft: rgba(179, 134, 28, 0.13);
+  --bad: #e0554f;
+  --bad-soft: rgba(224, 85, 79, 0.12);
+
+  /* Typography */
+  --font-body: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", sans-serif;
+  --font-display: Georgia, "Times New Roman", "Noto Serif", serif;
+
+  /* Shape */
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  background:
+    radial-gradient(1100px 500px at 85% -10%, rgba(94, 82, 190, 0.16), transparent 60%),
+    radial-gradient(900px 420px at -10% 0%, rgba(184, 134, 45, 0.10), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle star field — pure CSS, no assets */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(236, 238, 246, 0.35), transparent 100%),
+    radial-gradient(1px 1px at 32% 64%, rgba(236, 238, 246, 0.22), transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 8%, rgba(236, 238, 246, 0.3), transparent 100%),
+    radial-gradient(1px 1px at 71% 42%, rgba(236, 238, 246, 0.2), transparent 100%),
+    radial-gradient(1.5px 1.5px at 88% 74%, rgba(236, 238, 246, 0.28), transparent 100%),
+    radial-gradient(1px 1px at 44% 88%, rgba(236, 238, 246, 0.18), transparent 100%),
+    radial-gradient(1px 1px at 6% 79%, rgba(236, 238, 246, 0.2), transparent 100%),
+    radial-gradient(1.5px 1.5px at 94% 21%, rgba(236, 238, 246, 0.25), transparent 100%);
+  z-index: 0;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin: 0 0 0.4em;
+}
+
+a { color: var(--gold-text); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- Layout ---------- */
+
+.shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 22px 80px;
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.card--inset {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  box-shadow: none;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 14px/1 var(--font-body);
+  letter-spacing: 0.02em;
+  padding: 11px 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  user-select: none;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.btn--primary {
+  color: #171204;
+  background: linear-gradient(180deg, #dcb35e, var(--gold));
+  box-shadow: 0 10px 24px -10px rgba(184, 134, 45, 0.55);
+}
+.btn--primary:hover:not(:disabled) {
+  box-shadow: 0 14px 30px -10px rgba(184, 134, 45, 0.7);
+}
+
+.btn--ghost {
+  color: var(--ink-2);
+  background: transparent;
+  border-color: var(--border);
+}
+.btn--ghost:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-3); }
+
+.btn--danger-ghost {
+  color: var(--bad);
+  background: transparent;
+  border-color: transparent;
+}
+.btn--danger-ghost:hover:not(:disabled) { background: var(--bad-soft); }
+
+/* ---------- Forms ---------- */
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.field input,
+.field select {
+  font: 400 15px/1.3 var(--font-body);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  width: 100%;
+}
+.field input:focus,
+.field select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.field input::placeholder { color: var(--ink-3); }
+
+.field .hint { font-size: 12px; color: var(--ink-3); }
+
+/* ---------- Chips & status (icon + label always; never color alone) ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  background: var(--surface);
+}
+.chip--good { color: var(--good); background: var(--good-soft); border-color: transparent; }
+.chip--warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.chip--bad  { color: var(--bad);  background: var(--bad-soft);  border-color: transparent; }
+.chip--gold { color: var(--gold-text); background: var(--gold-soft); border-color: transparent; }
+
+/* ---------- Banners ---------- */
+
+.banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  font-size: 13.5px;
+  border: 1px solid;
+}
+.banner--warn { color: #d9b45e; background: var(--warn-soft); border-color: rgba(179, 134, 28, 0.35); }
+.banner--bad  { color: #ec8a86; background: var(--bad-soft);  border-color: rgba(224, 85, 79, 0.35); }
+
+/* ---------- Utility ---------- */
+
+.muted { color: var(--ink-2); }
+.small { font-size: 13px; }
+.mono  { font-variant-numeric: tabular-nums; }
+
+.fade-in { animation: fadeIn 0.35s ease both; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- Skeleton shimmer ---------- */
+
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 42%, var(--surface-2) 60%);
+  background-size: 300% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

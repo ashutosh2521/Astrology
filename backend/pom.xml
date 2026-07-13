@@ -64,4 +64,80 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+          Builds the Angular app and embeds it into the jar's static/ so Spring Boot
+          serves the SPA (see SpaWebConfig). Active by default; skip with -Dskip.web
+          for fast backend-only iteration. Bound to prepare-package so `mvn test`
+          never triggers a web build.
+        -->
+        <profile>
+            <id>web</id>
+            <activation>
+                <property>
+                    <name>!skip.web</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <version>1.15.0</version>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/../web</workingDirectory>
+                            <!-- Node installs under target/ so it never pollutes the repo -->
+                            <installDirectory>${project.build.directory}</installDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install-node-and-npm</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>install-node-and-npm</goal></goals>
+                                <configuration>
+                                    <nodeVersion>v22.12.0</nodeVersion>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>npm-ci</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>npm</goal></goals>
+                                <configuration>
+                                    <arguments>ci --no-audit --no-fund</arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>npm-build</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>npm</goal></goals>
+                                <configuration>
+                                    <arguments>run build</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-web-dist</id>
+                                <phase>prepare-package</phase>
+                                <goals><goal>copy-resources</goal></goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}/../web/dist/web/browser</directory>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

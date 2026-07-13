@@ -101,9 +101,17 @@ Accuracy-first — the riskiest, hardest-to-fix-later parts come first:
 
 ```
 ephemeris-service/   Python ephemeris microservice (pyswisseph)
-backend/             Spring Boot API + Ashtakoot engine + reference tables (later)
-web/                 Angular web client (later)
+backend/             Spring Boot API + Ashtakoot engine + reference tables + embedded web build
+web/                 Angular web client (built into the backend jar at package time)
 mobile/              Ionic + Capacitor Android wrapper (later)
 infra/               Nginx, systemd units, deploy notes (later)
 docs/                Design notes, ADRs, the original spec
 ```
+
+### Single-jar deployment
+
+`mvn package` in `backend/` builds the Angular app via `frontend-maven-plugin` (pinned
+Node, reproducible) and embeds it under the jar's `static/`; Spring Boot serves the SPA
+with an index.html fallback for deep links (`SpaWebConfig`). One deployable artifact —
+Nginx's job reduces to TLS + reverse proxy. Skip the web build during backend iteration
+with `-Dskip.web`.
