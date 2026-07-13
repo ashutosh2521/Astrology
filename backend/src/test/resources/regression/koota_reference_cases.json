@@ -1,0 +1,117 @@
+{
+  "_doc": [
+    "Ashtakoot regression reference cases. Each case's INPUTS (boy/girl Moon Rashi+Nakshatra+Pada)",
+    "are filled and chosen to exercise a specific koota or cancellation path. The 'expected'",
+    "block is the authoritative Drik Panchang result and starts null with status PENDING_DRIK_PANCHANG.",
+    "",
+    "HOW TO FILL (per case):",
+    "1. Open Drik Panchang Kundli Matching: https://www.drikpanchang.com/jyotisha/kundli/matching/kundli-matching.html",
+    "2. Enter birth details for two people whose Moon lands on this case's Rashi+Nakshatra+Pada",
+    "   (or use its Ashtakoot table directly if entering nakshatras).",
+    "3. Copy the obtained points for each of the 8 kootas, the total, and whether Nadi/Bhakoot",
+    "   dosha is present-and-not-cancelled into 'expected', then set status to FILLED.",
+    "",
+    "Cases with status != FILLED are SKIPPED (not failed). Once FILLED, a mismatch FAILS the",
+    "build and tells you exactly which provisional table cell to correct (see VERIFICATION.md).",
+    "Expected fields may be omitted individually (null) to assert only a subset."
+  ],
+  "_source": "https://www.drikpanchang.com/jyotisha/kundli/matching/kundli-matching.html",
+  "_expectedShape": {
+    "varna": "0..1", "vashya": "0..2", "tara": "0..3", "yoni": "0..4",
+    "grahaMaitri": "0..5", "gana": "0..6", "bhakoot": "0 or 7", "nadi": "0 or 8",
+    "total": "0..36", "nadiDoshaEffective": "bool", "bhakootDoshaEffective": "bool"
+  },
+  "cases": [
+    {
+      "id": "nadi-dosha-identical",
+      "note": "Identical Moon Nakshatra+Pada → same Nadi, no cancellation → Nadi dosha effective",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "nadi-dosha-cancel-different-pada",
+      "note": "Same Nakshatra, different Pada → Nadi dosha present but cancelled by convention",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 2 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "nadi-different",
+      "note": "Aadi vs Madhya → different Nadi → full 8, no dosha",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "MESHA", "nakshatra": "BHARANI", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "bhakoot-2-12",
+      "note": "Mesha/Vrishabha = 2-12 → Bhakoot dosha",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "VRISHABHA", "nakshatra": "KRITTIKA", "pada": 3 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "bhakoot-5-9",
+      "note": "Mesha/Simha = 5-9 → Bhakoot dosha",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "SIMHA", "nakshatra": "MAGHA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "bhakoot-6-8",
+      "note": "Mesha/Kanya = 6-8 → Bhakoot dosha, lords Mars/Mercury (enemies) → not cancelled",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "KANYA", "nakshatra": "HASTA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "bhakoot-cancel-same-lord",
+      "note": "Mesha/Vrishchika = 6-8 but share lord Mars → Bhakoot dosha cancelled",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "VRISHCHIKA", "nakshatra": "ANURADHA", "pada": 2 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "varna-boy-lower-tier",
+      "note": "Shudra boy vs Brahmin girl → Varna 0",
+      "boy":  { "rashi": "MITHUNA", "nakshatra": "ARDRA", "pada": 2 },
+      "girl": { "rashi": "KARKA", "nakshatra": "PUSHYA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "gana-deva-vs-rakshasa",
+      "note": "Deva boy vs Rakshasa girl → low Gana; directional convention under test",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "VRISHABHA", "nakshatra": "KRITTIKA", "pada": 2 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "yoni-sworn-enemy",
+      "note": "Horse vs Buffalo (sworn enemies) → Yoni 0; isolated (7-7 rashi, no Bhakoot)",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "TULA", "nakshatra": "SWATI", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "grahamaitri-mutual-enemy",
+      "note": "Sun vs Saturn lords (mutual enemies) → Graha Maitri 0",
+      "boy":  { "rashi": "SIMHA", "nakshatra": "MAGHA", "pada": 1 },
+      "girl": { "rashi": "MAKARA", "nakshatra": "SHRAVANA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "ordinary-pair-1",
+      "note": "Realistic mixed pair, no engineered dosha",
+      "boy":  { "rashi": "MITHUNA", "nakshatra": "PUNARVASU", "pada": 2 },
+      "girl": { "rashi": "TULA", "nakshatra": "SWATI", "pada": 3 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "ordinary-pair-2",
+      "note": "Realistic mixed pair, no engineered dosha",
+      "boy":  { "rashi": "DHANU", "nakshatra": "MULA", "pada": 1 },
+      "girl": { "rashi": "MEENA", "nakshatra": "REVATI", "pada": 4 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    }
+  ]
+}

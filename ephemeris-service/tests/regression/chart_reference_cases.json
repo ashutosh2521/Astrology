@@ -1,0 +1,51 @@
+{
+  "_doc": [
+    "Ephemeris chart regression cases. Each case's INPUT is a birth instant (UTC) + coordinates.",
+    "The 'expected' Moon placement is the authoritative Drik Panchang result and starts null with",
+    "status PENDING_DRIK_PANCHANG.",
+    "",
+    "HOW TO FILL (per case):",
+    "1. Open Drik Panchang Kundli / birth chart for the same birth date, exact time, and place.",
+    "   Ensure Ayanamsa = Lahiri and the chart is sidereal (Nirayana).",
+    "2. Read the Moon's Rashi, Nakshatra and Pada and copy them into 'expected'; set status FILLED.",
+    "3. Times here are UTC. Convert the local birth time to UTC exactly as Drik Panchang used it.",
+    "",
+    "BOUNDARY CASES (the spec's core concern): add cases where the Moon sits within ~1 degree of a",
+    "Nakshatra/Rashi transition, and record in 'note' that a small time change flips the result.",
+    "These are the highest-value cases for catching ayanamsa/precision drift.",
+    "",
+    "Cases with status != FILLED are SKIPPED. The whole file is also skipped when swisseph or the",
+    ".se1 data files are unavailable (e.g. CI without ephemeris data)."
+  ],
+  "_source": "https://www.drikpanchang.com/jyotisha/kundli/kundli.html",
+  "ayanamsa": "LAHIRI",
+  "cases": [
+    {
+      "id": "delhi-ordinary-1",
+      "note": "Ordinary daytime birth, New Delhi",
+      "utc": "1990-01-01T06:30:00Z",
+      "latitude": 28.6139,
+      "longitude": 77.2090,
+      "status": "PENDING_DRIK_PANCHANG",
+      "expected": null
+    },
+    {
+      "id": "mumbai-ordinary-1",
+      "note": "Ordinary evening birth, Mumbai",
+      "utc": "1985-08-20T16:45:00Z",
+      "latitude": 19.0760,
+      "longitude": 72.8777,
+      "status": "PENDING_DRIK_PANCHANG",
+      "expected": null
+    },
+    {
+      "id": "boundary-slot-1",
+      "note": "PLACEHOLDER for a Moon-near-Nakshatra-boundary case; replace utc/coords with a real boundary birth and record the flip in this note",
+      "utc": "2000-06-15T00:00:00Z",
+      "latitude": 28.6139,
+      "longitude": 77.2090,
+      "status": "PENDING_DRIK_PANCHANG",
+      "expected": null
+    }
+  ]
+}

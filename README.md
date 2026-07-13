@@ -78,7 +78,11 @@ calls to Python.
 - Reference charts (ordinary + deliberate Nakshatra/Rashi boundary cases) with outputs
   hand-verified against **Drik Panchang**.
 - Regression suite runs as a required gate on any change touching the ephemeris service or
-  the koota engine — from the first commit, not retrofitted.
+  the koota engine — from the first commit, not retrofitted. The harness is in place (see
+  [`docs/regression.md`](./docs/regression.md)): chart cases validate ephemeris output and
+  koota cases validate the engine against Drik Panchang. Seeded cases skip until their
+  reference values are filled, then fail on any mismatch — that's what promotes the
+  provisional tables (see [`backend/VERIFICATION.md`](./backend/VERIFICATION.md)) to verified.
 - Ashtakoot reference tables are **static JSON**, validated at startup (matrix dimensions,
   no missing Rashi/Nakshatra keys), so each koota is independently unit-testable.
 

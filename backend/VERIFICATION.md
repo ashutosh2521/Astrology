@@ -46,7 +46,17 @@ one that actually fires. Confirm which conditions Drik Panchang actually applies
   stores full chart data so this can be added later without a recompute.
 
 ## The real gate
-Per the spec's validation strategy: build the regression suite of reference charts (ordinary
-+ boundary cases) with Nakshatra/Rashi/koota scores hand-verified against Drik Panchang, and
-run it on every change to calculation code. That suite — not these unit tests — is what turns
-the PROVISIONAL rows above into verified ones.
+Per the spec's validation strategy: the regression suite of reference charts (ordinary +
+boundary cases) with Nakshatra/Rashi/koota scores hand-verified against Drik Panchang — not
+these unit tests — is what turns the PROVISIONAL rows above into verified ones.
+
+**The harness now exists** (see [`docs/regression.md`](../docs/regression.md)):
+- Koota cases: `backend/src/test/java/.../regression/KootaRegressionTest.java` +
+  `backend/src/test/resources/regression/koota_reference_cases.json`
+- Chart cases: `ephemeris-service/tests/regression/`
+
+Cases are seeded with inputs that exercise each PROVISIONAL cell above; their `expected`
+values are `PENDING_DRIK_PANCHANG` and the cases skip until filled. **To verify a row above:**
+fill the koota case(s) that exercise it from Drik Panchang, set status `FILLED`, run
+`mvn test`, and drive any mismatch to zero by correcting the table cell. A green filled case
+is a verified cell.
