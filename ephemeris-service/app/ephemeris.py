@@ -15,6 +15,7 @@ Ayanamsa is set to Lahiri explicitly (never a hidden default), per the spec.
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
 
 import swisseph as swe
@@ -52,17 +53,40 @@ class GrahaPosition:
     speed: float              # degrees/day; negative = retrograde
 
 
-def configure(ephe_path: str) -> None:
-    """Point Swiss Ephemeris at the data files and lock the ayanamsa to Lahiri.
+# Swiss Ephemeris state (ephe path, sid mode) is thread-local in common pyswisseph
+# builds: configuration done in one thread is INVISIBLE to others. A calculation on
+# an unconfigured thread silently falls back to Moshier with the default (non-Lahiri)
+# ayanamsa — measured ~0.9 deg of silent error, enough to flip a Nakshatra. Every
+# public function here re-asserts configuration on ITS OWN thread before computing.
+_configured_path: str | None = None
+_thread_state = threading.local()
 
-    Call once at startup, before any calculation.
+
+def configure(ephe_path: str) -> None:
+    """Record the data-file path and configure the calling thread.
+
+    Call once at startup; per-thread (re)configuration then happens automatically
+    inside every calculation via ``_ensure_thread_configured``.
     """
-    swe.set_ephe_path(ephe_path)
+    global _configured_path
+    _configured_path = ephe_path
+    _ensure_thread_configured()
+
+
+def _ensure_thread_configured() -> None:
+    """Apply ephe path + Lahiri sid mode on the current thread, once per thread."""
+    if getattr(_thread_state, "ready", False):
+        return
+    if _configured_path is None:
+        raise PrecisionError("ephemeris not configured: call configure() at startup")
+    swe.set_ephe_path(_configured_path)
     swe.set_sid_mode(swe.SIDM_LAHIRI, 0, 0)
+    _thread_state.ready = True
 
 
 def _calc(jd_ut: float, body: int) -> tuple[float, float]:
     """Return (sidereal longitude, speed) for one body, asserting full precision."""
+    _ensure_thread_configured()
     values, ret_flags = swe.calc_ut(jd_ut, body, _CALC_FLAGS)
     if ret_flags < 0:
         raise PrecisionError(f"swe.calc_ut failed for body {body} (flags={ret_flags})")
@@ -100,6 +124,7 @@ def compute_ascendant(jd_ut: float, lat: float, lon: float) -> float:
 
     Uses whole-sign-friendly Placidus cusps; only the Ascendant point is consumed.
     """
+    _ensure_thread_configured()
     _cusps, ascmc = swe.houses_ex(jd_ut, lat, lon, b"P", swe.FLG_SIDEREAL)
     return ascmc[0] % 360.0
 

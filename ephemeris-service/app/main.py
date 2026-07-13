@@ -49,8 +49,15 @@ def _placement(p: astro.PlacementIn) -> Placement:
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    """Liveness probe. Re-asserts full precision so a degraded process reports unhealthy."""
+async def health() -> dict[str, str]:
+    """Liveness probe. Re-asserts full precision so a degraded process reports unhealthy.
+
+    ``async def`` is deliberate here and on /chart: sync endpoints run on FastAPI's
+    threadpool, and Swiss Ephemeris state is thread-local in common pyswisseph builds
+    (see app/ephemeris.py). Async endpoints run on the single event-loop thread — the
+    same one startup configured. Calculations are ~1ms, so blocking the loop is fine
+    at this service's scale.
+    """
     try:
         ephemeris.self_check()
     except ephemeris.PrecisionError as exc:
@@ -59,7 +66,7 @@ def health() -> dict[str, str]:
 
 
 @app.post("/chart", response_model=ChartResponse)
-def chart(req: ChartRequest) -> ChartResponse:
+async def chart(req: ChartRequest) -> ChartResponse:
     jd = ephemeris.julian_day_ut(
         req.utc.year,
         req.utc.month,
@@ -73,6 +80,10 @@ def chart(req: ChartRequest) -> ChartResponse:
     except ephemeris.PrecisionError as exc:
         # Never degrade to a low-precision answer; surface it as a hard failure.
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        # e.g. swisseph.Error from houses_ex — surface as JSON detail, not a bare 500.
+        raise HTTPException(
+            status_code=500, detail=f"chart computation failed: {exc}") from exc
 
     moon_pos = next(g for g in grahas if g.name == "Moon")
     moon = MoonDetail(
