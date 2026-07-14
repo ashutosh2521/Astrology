@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AshtakootResult, DoshaStatus, MatchResponse, RecommendationCategory } from '../core/models';
 import { I18nService } from '../core/i18n.service';
+import { PlatformService } from '../core/platform.service';
 
 /**
  * Mother-mode result view (spec §14).
@@ -158,30 +159,21 @@ import { I18nService } from '../core/i18n.service';
 export class MotherResultPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
+  private readonly platform = inject(PlatformService);
   readonly i18n = inject(I18nService);
 
   readonly match = signal<MatchResponse | null>(null);
   readonly loading = signal(true);
 
   /**
-   * Text-summary share. Uses the native Web Share API when available
-   * (Android Chrome, iOS Safari); falls back to a wa.me deep link that
-   * opens WhatsApp with the pre-filled message on every other browser.
-   * Text mirrors the brief §17 "Example summary" verbatim in structure.
+   * Text-summary share. Routes through PlatformService which handles
+   * the three-way dispatch: Capacitor's native share sheet inside the
+   * Android APK, Web Share API in mobile browsers, WhatsApp URL fallback
+   * everywhere else. Text mirrors brief §17.
    */
   share(m: MatchResponse): void {
     const text = this.buildSummary(m);
-    const nav = navigator as Navigator & { share?: (data: ShareData) => Promise<void> };
-    if (nav.share) {
-      nav.share({ title: this.i18n.t('report.title'), text }).catch(() => this.whatsapp(text));
-    } else {
-      this.whatsapp(text);
-    }
-  }
-
-  private whatsapp(text: string): void {
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank', 'noopener');
+    this.platform.share({ title: this.i18n.t('report.title'), text });
   }
 
   private buildSummary(m: MatchResponse): string {

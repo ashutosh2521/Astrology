@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { ApiService } from './core/api.service';
 import { I18nService } from './core/i18n.service';
+import { PlatformService } from './core/platform.service';
 
 @Component({
   selector: 'app-root',
@@ -130,11 +131,15 @@ import { I18nService } from './core/i18n.service';
 })
 export class AppComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly platform = inject(PlatformService);
   readonly i18n = inject(I18nService);
   readonly healthy = signal(true);
 
   ngOnInit(): void {
     document.documentElement.lang = this.i18n.lang();
+    // Android hardware / gesture back = history.back(); root-level back = exit.
+    // No-op on the web.
+    this.platform.installAndroidBackHandler();
     this.api.health().subscribe({
       next: h => this.healthy.set(h.ephemeris === 'UP'),
       error: () => this.healthy.set(false),
