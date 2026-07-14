@@ -46,4 +46,12 @@ export class ApiService {
   listMatches(): Observable<MatchResponse[]> {
     return this.http.get<MatchResponse[]>('/api/matches');
   }
+
+  getMatch(id: number | string): Observable<MatchResponse> {
+    return this.http.get<MatchResponse>(`/api/matches/${id}`);
+  }
+
+  getChart(id: number): Observable<ChartResponse> {
+    return this.http.get<ChartResponse>(`/api/charts/${id}`);
+  }
 }

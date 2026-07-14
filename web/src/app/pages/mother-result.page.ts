@@ -58,6 +58,16 @@ import { I18nService } from '../core/i18n.service';
         <p class="disclaimer">{{ i18n.t('motherResult.disclaimer') }}</p>
 
         <div class="actions">
+          <div class="actions__row">
+            <a [routerLink]="['/print', m.id]" target="_blank" rel="noopener"
+               class="btn btn--ghost btn--sm">
+              {{ i18n.t('motherResult.pdf') }}
+            </a>
+            <button type="button" class="btn btn--ghost btn--sm" (click)="share(m)">
+              {{ i18n.t('motherResult.share') }}
+            </button>
+          </div>
+
           <a routerLink="/new-match" class="btn btn--primary">
             {{ i18n.t('motherResult.newMatchAgain') }}
           </a>
@@ -139,7 +149,10 @@ import { I18nService } from '../core/i18n.service';
     }
 
     .actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .actions__row { display: flex; gap: 10px; margin-bottom: 6px; }
+    .actions__row .btn { flex: 1; justify-content: center; }
     .actions .btn { justify-content: center; padding: 14px 18px; font-size: 15px; }
+    .actions .btn--sm { padding: 10px 14px; font-size: 13.5px; }
   `],
 })
 export class MotherResultPage implements OnInit {
@@ -149,6 +162,41 @@ export class MotherResultPage implements OnInit {
 
   readonly match = signal<MatchResponse | null>(null);
   readonly loading = signal(true);
+
+  /**
+   * Text-summary share. Uses the native Web Share API when available
+   * (Android Chrome, iOS Safari); falls back to a wa.me deep link that
+   * opens WhatsApp with the pre-filled message on every other browser.
+   * Text mirrors the brief §17 "Example summary" verbatim in structure.
+   */
+  share(m: MatchResponse): void {
+    const text = this.buildSummary(m);
+    const nav = navigator as Navigator & { share?: (data: ShareData) => Promise<void> };
+    if (nav.share) {
+      nav.share({ title: this.i18n.t('report.title'), text }).catch(() => this.whatsapp(text));
+    } else {
+      this.whatsapp(text);
+    }
+  }
+
+  private whatsapp(text: string): void {
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener');
+  }
+
+  private buildSummary(m: MatchResponse): string {
+    const title = this.i18n.t('report.title');
+    const names = `${m.boyLabel ?? 'A'} ${this.i18n.lang() === 'hi' ? 'एवं' : '&'} ${m.girlLabel ?? 'B'}`;
+    const total = `${this.i18n.t('motherResult.total')}: ${this.formatScore(m.result.totalPoints)}/${m.result.maxPoints.toFixed(0)}`;
+    const nadi = `${this.i18n.t('motherResult.nadi')}: ${this.doshaLabel(this.nadi())}`;
+    const bhakoot = `${this.i18n.t('motherResult.bhakoot')}: ${this.doshaLabel(this.bhakoot())}`;
+    const manglik = `${this.i18n.t('motherResult.manglik')}: ${this.manglikLabel()}`;
+    const cat = `${this.i18n.t('report.category')}: ${this.i18n.t('motherResult.category.' + m.recommendation)}`;
+    const short = this.i18n.lang() === 'hi'
+      ? 'यह केवल प्रारंभिक जांच है। विवाह का अंतिम निर्णय विस्तृत परामर्श के बाद लें।'
+      : 'This is a preliminary check only. Consult an experienced astrologer before any marriage decision.';
+    return [title, names, '', total, nadi, bhakoot, manglik, '', cat, '', short].join('\n');
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');

@@ -27,6 +27,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/history.page').then(m => m.HistoryPage),
     title: 'Kundli · पिछले मिलान',
   },
+  {
+    path: 'print/:id',
+    loadComponent: () => import('./pages/print-report.page').then(m => m.PrintReportPage),
+    title: 'Kundli · Print report',
+  },
 
   // ---- Advanced mode: the pre-M5 pages, moved under a prefix ----
   {
