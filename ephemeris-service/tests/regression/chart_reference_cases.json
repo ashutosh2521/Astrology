@@ -21,6 +21,15 @@
   "ayanamsa": "LAHIRI",
   "cases": [
     {
+      "id": "ranchi-ashutosh-primary",
+      "note": "Primary profile: Ashutosh Kumar, 25 Oct 1998, 04:20 PM IST at Ranchi. In 24-hour form 16:20; IST is UTC+5:30 so the UTC instant is 1998-10-25T10:50:00Z. This case is the app's canonical accuracy anchor — a silent 04:20 AM / PM confusion or an ayanamsa slip would show up here first. Coordinates match web/src/app/core/cities.ts entry for Ranchi.",
+      "utc": "1998-10-25T10:50:00Z",
+      "latitude": 23.3441,
+      "longitude": 85.3096,
+      "status": "PENDING_DRIK_PANCHANG",
+      "expected": null
+    },
+    {
       "id": "delhi-ordinary-1",
       "note": "Ordinary daytime birth, New Delhi",
       "utc": "1990-01-01T06:30:00Z",
