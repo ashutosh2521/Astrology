@@ -104,6 +104,18 @@ public class BirthChartService {
                 .orElseThrow(() -> new NotFoundException("Birth chart " + id + " not found"));
     }
 
+    /**
+     * The chart's label if it still exists, otherwise {@code null}. Unlike
+     * {@link #get(long)} this never throws — read paths that display a stored
+     * match (history list, result view) must tolerate a chart that has since
+     * been deleted, falling back to a generic placeholder rather than 404ing
+     * the whole list.
+     */
+    @Transactional(readOnly = true)
+    public String findLabel(long id) {
+        return repository.findById(id).map(BirthChart::getLabel).orElse(null);
+    }
+
     @Transactional(readOnly = true)
     public List<BirthChart> list() {
         return repository.findAll();

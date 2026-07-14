@@ -2,6 +2,7 @@ package codes.ashutoshkumar.kundli.api;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootResult;
 import codes.ashutoshkumar.kundli.ashtakoot.RecommendationCategory;
+import codes.ashutoshkumar.kundli.chart.BirthChartService;
 import codes.ashutoshkumar.kundli.config.KundliProperties;
 import codes.ashutoshkumar.kundli.manglik.ManglikCompatibility;
 import codes.ashutoshkumar.kundli.match.MatchRecord;
@@ -73,11 +74,14 @@ public class MatchController {
     ) {}
 
     private final MatchService service;
+    private final BirthChartService charts;
     private final ObjectMapper mapper;
     private final KundliProperties props;
 
-    public MatchController(MatchService service, ObjectMapper mapper, KundliProperties props) {
+    public MatchController(MatchService service, BirthChartService charts,
+                           ObjectMapper mapper, KundliProperties props) {
         this.service = service;
+        this.charts = charts;
         this.mapper = mapper;
         this.props = props;
     }
@@ -119,22 +123,27 @@ public class MatchController {
     @GetMapping("/{id}")
     public MatchResponse get(@PathVariable long id) {
         MatchRecord r = service.get(id);
-        return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
-                null, null, parse(r.getResultJson()),
-                parseManglik(r.getManglikJson()),
-                service.categorize(r.getTotalPoints()),
-                r.getRulesVersion(), metadataFor(r), r.getCreatedAt());
+        return toResponse(r);
     }
 
     @GetMapping
     public List<MatchResponse> list() {
-        return service.list().stream()
-                .map(r -> new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
-                        null, null, parse(r.getResultJson()),
-                        parseManglik(r.getManglikJson()),
-                        service.categorize(r.getTotalPoints()),
-                        r.getRulesVersion(), metadataFor(r), r.getCreatedAt()))
-                .toList();
+        return service.list().stream().map(this::toResponse).toList();
+    }
+
+    /**
+     * Re-inflate a stored match into a response. The bride/groom labels are
+     * resolved from their charts here (not persisted on the match) so the
+     * history list and result view show the real names instead of the
+     * generic "A"/"B" fallback the UI renders when a label is {@code null}.
+     */
+    private MatchResponse toResponse(MatchRecord r) {
+        return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
+                charts.findLabel(r.getBoyChartId()), charts.findLabel(r.getGirlChartId()),
+                parse(r.getResultJson()),
+                parseManglik(r.getManglikJson()),
+                service.categorize(r.getTotalPoints()),
+                r.getRulesVersion(), metadataFor(r), r.getCreatedAt());
     }
 
     private AshtakootResult parse(String json) {

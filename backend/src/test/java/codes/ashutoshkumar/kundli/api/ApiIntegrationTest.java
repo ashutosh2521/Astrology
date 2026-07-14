@@ -104,12 +104,23 @@ class ApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.kootas", hasSize(8)))
                 .andExpect(jsonPath("$.result.doshas[0].cancelled").value(true))
+                // Bride/groom labels are resolved from the charts on read too —
+                // without this the UI fell back to the generic "A"/"B" placeholder
+                // for every stored match (history list and result view).
+                .andExpect(jsonPath("$.boyLabel").value("Boy"))
+                .andExpect(jsonPath("$.girlLabel").value("Girl"))
                 // The rule-metadata block also appears on GET, and its
                 // ashtakootaRuleVersion is the frozen historical value from the
                 // stored MatchRecord — a later config bump must not silently
                 // relabel historical results.
                 .andExpect(jsonPath("$.ruleMetadata.ashtakootaRuleVersion")
                         .value(containsString("provisional")));
+
+        // ...and on the history list, which the Mother-mode history page renders.
+        mvc.perform(get("/api/matches"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].boyLabel").value("Boy"))
+                .andExpect(jsonPath("$[0].girlLabel").value("Girl"));
     }
 
     @Test
