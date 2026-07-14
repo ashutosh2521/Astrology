@@ -8,25 +8,27 @@ package codes.ashutoshkumar.kundli.ashtakoot.model;
  * here, so those tables stay independently verifiable against Drik Panchang.
  */
 public enum Rashi {
-    MESHA(1, "Aries"),
-    VRISHABHA(2, "Taurus"),
-    MITHUNA(3, "Gemini"),
-    KARKA(4, "Cancer"),
-    SIMHA(5, "Leo"),
-    KANYA(6, "Virgo"),
-    TULA(7, "Libra"),
-    VRISHCHIKA(8, "Scorpio"),
-    DHANU(9, "Sagittarius"),
-    MAKARA(10, "Capricorn"),
-    KUMBHA(11, "Aquarius"),
-    MEENA(12, "Pisces");
+    MESHA(1, "Aries", "Mesha"),
+    VRISHABHA(2, "Taurus", "Vrishabha"),
+    MITHUNA(3, "Gemini", "Mithuna"),
+    KARKA(4, "Cancer", "Karka"),
+    SIMHA(5, "Leo", "Simha"),
+    KANYA(6, "Virgo", "Kanya"),
+    TULA(7, "Libra", "Tula"),
+    VRISHCHIKA(8, "Scorpio", "Vrishchika"),
+    DHANU(9, "Sagittarius", "Dhanu"),
+    MAKARA(10, "Capricorn", "Makara"),
+    KUMBHA(11, "Aquarius", "Kumbha"),
+    MEENA(12, "Pisces", "Meena");
 
     private final int number;
     private final String english;
+    private final String sanskritTitle;
 
-    Rashi(int number, String english) {
+    Rashi(int number, String english, String sanskritTitle) {
         this.number = number;
         this.english = english;
+        this.sanskritTitle = sanskritTitle;
     }
 
     /** 1-based ordinal (1 = Mesha … 12 = Meena). */
@@ -36,6 +38,15 @@ public enum Rashi {
 
     public String english() {
         return english;
+    }
+
+    /**
+     * Title-case Sanskrit name — the display form the UI expects
+     * ("Mesha", "Vrishchika"). Never the ALL-CAPS enum {@link #name()},
+     * which is an internal identifier.
+     */
+    public String sanskritTitle() {
+        return sanskritTitle;
     }
 
     public static Rashi ofNumber(int number) {

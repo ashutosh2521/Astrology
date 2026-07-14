@@ -49,8 +49,10 @@ public final class ChartDtos {
                     c.getLongitude(),
                     c.getPlaceName(),
                     c.getUtcInstant(),
-                    Rashi.ofNumber(c.getMoonRashiNumber()).name(),
-                    Nakshatra.ofNumber(c.getMoonNakshatraNumber()).name(),
+                    // Title-case Sanskrit — matches the frontend i18n lookups
+                    // ("Mesha", "Purva Ashadha"), NOT the ALL-CAPS enum name.
+                    Rashi.ofNumber(c.getMoonRashiNumber()).sanskritTitle(),
+                    Nakshatra.ofNumber(c.getMoonNakshatraNumber()).sanskritTitle(),
                     c.getMoonPada(),
                     c.getWarnings() == null ? List.of() : List.of(c.getWarnings().split("\n")),
                     c.getAyanamsa(),
