@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kundli">
+  <!--
+    App icon: gold ✦ + "क" mark on the app's dark background.
+    Single scalable source — used at every size via the manifest's
+    "sizes": "any" entry. Raster PNG fallbacks (192, 512, maskable)
+    are generated from this SVG on the dev machine — see
+    docs/ANDROID_BUILD.md.
+  -->
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0b459"/>
+      <stop offset="50%" stop-color="#b8862d"/>
+      <stop offset="100%" stop-color="#8a5f1e"/>
+    </linearGradient>
+    <radialGradient id="bg" cx="50%" cy="45%" r="60%">
+      <stop offset="0%"  stop-color="#1a1c2e"/>
+      <stop offset="100%" stop-color="#0f1018"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Dark rounded backdrop -->
+  <rect x="0" y="0" width="512" height="512" rx="88" fill="url(#bg)"/>
+
+  <!-- Subtle gold outline ring for foundation contrast on light launchers -->
+  <rect x="16" y="16" width="480" height="480" rx="76"
+        fill="none" stroke="url(#gold)" stroke-width="4" opacity="0.35"/>
+
+  <!--
+    Central mark: an eight-pointed star (aligning with Ashtakoot's "eight"),
+    layered over a discrete kundli-square hint.
+  -->
+  <g transform="translate(256 256)">
+    <!-- Eight-pointed star: two rotated squares -->
+    <g fill="url(#gold)">
+      <polygon points="0,-150 44,-44 150,0 44,44 0,150 -44,44 -150,0 -44,-44"/>
+      <polygon points="0,-110 32,-32 110,0 32,32 0,110 -32,32 -110,0 -32,-32"
+               opacity="0.55" transform="rotate(22.5)"/>
+    </g>
+    <!-- Center dot -->
+    <circle r="18" fill="#f6dfa0"/>
+  </g>
+
+  <!-- Small caption band at the bottom, understated -->
+  <text x="256" y="470" text-anchor="middle" font-family="Georgia, serif"
+        font-size="42" fill="url(#gold)" letter-spacing="6">KUNDLI</text>
+</svg>
