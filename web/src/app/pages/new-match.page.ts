@@ -6,6 +6,7 @@ import { City } from '../core/cities';
 import { ProfileResponse } from '../core/models';
 import { I18nService } from '../core/i18n.service';
 import { PlacePickerComponent } from '../components/place-picker.component';
+import { DateFieldComponent } from '../components/date-field.component';
 
 /**
  * Mother-mode new-match form. Asks ONLY for the bride's details.
@@ -22,7 +23,7 @@ import { PlacePickerComponent } from '../components/place-picker.component';
 @Component({
   selector: 'app-new-match',
   standalone: true,
-  imports: [FormsModule, RouterLink, PlacePickerComponent],
+  imports: [FormsModule, RouterLink, PlacePickerComponent, DateFieldComponent],
   template: `
     <section class="new-match">
       <a routerLink="/" class="back" aria-label="Home">←</a>
@@ -47,16 +48,16 @@ import { PlacePickerComponent } from '../components/place-picker.component';
                    autocomplete="off" />
           </div>
 
-          <div class="grid-2">
-            <div class="field">
-              <label for="date">{{ i18n.t('newMatch.date') }}</label>
-              <input id="date" name="date" type="date" required [(ngModel)]="form.date" />
-            </div>
-            <div class="field">
-              <label for="time">{{ i18n.t('newMatch.time') }}</label>
-              <input id="time" name="time" type="time" required [(ngModel)]="form.time" />
-              <span class="hint">{{ i18n.t('newMatch.timeHint') }}</span>
-            </div>
+          <div class="field">
+            <label>{{ i18n.t('newMatch.date') }}</label>
+            <app-date-field [ariaLabel]="i18n.t('newMatch.date')"
+                            (changed)="form.date = $event" />
+          </div>
+
+          <div class="field">
+            <label for="time">{{ i18n.t('newMatch.time') }}</label>
+            <input id="time" name="time" type="time" required [(ngModel)]="form.time" />
+            <span class="hint">{{ i18n.t('newMatch.timeHint') }}</span>
           </div>
 
           <div class="field">
@@ -122,7 +123,8 @@ export class NewMatchPage implements OnInit {
   }
 
   canSubmit(formInvalid: boolean | null): boolean {
-    return !formInvalid && this.form.city != null;
+    // The date-field lives outside ngForm; it emits '' until a valid date is set.
+    return !formInvalid && this.form.date !== '' && this.form.city != null;
   }
 
   next(): void {

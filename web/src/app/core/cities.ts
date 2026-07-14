@@ -19,6 +19,7 @@ export interface City {
   lon: number;
   tz: string;        // IANA timezone
   search: string;    // Pre-normalized haystack: name + aliases + hi + region
+  online?: boolean;  // True for results fetched live from the geocoder
 }
 
 const STATE_HI: Record<string, string> = {
@@ -367,6 +368,27 @@ export const CITIES: City[] = [
     search: haystack(name, hi, aliases, country, countryHi),
   })),
 ];
+
+/**
+ * Adapt an online geocoder hit to the {@link City} shape the picker consumes.
+ * Online results have no curated Hindi name, so the English name/region stand
+ * in for both scripts; `online: true` lets the UI flag them.
+ */
+export function geoResultToCity(g: {
+  name: string; region: string; latitude: number; longitude: number; timezone: string;
+}): City {
+  return {
+    name: g.name,
+    hi: g.name,
+    region: g.region,
+    regionHi: g.region,
+    lat: g.latitude,
+    lon: g.longitude,
+    tz: g.timezone,
+    search: haystack(g.name, g.region),
+    online: true,
+  };
+}
 
 /** Prefix-first ranked search over English names, Hindi names, and aliases. */
 export function searchCities(query: string, limit = 8): City[] {

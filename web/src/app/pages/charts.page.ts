@@ -6,11 +6,12 @@ import { ChartResponse, ProfileResponse } from '../core/models';
 import { City } from '../core/cities';
 import { I18nService } from '../core/i18n.service';
 import { PlacePickerComponent } from '../components/place-picker.component';
+import { DateFieldComponent } from '../components/date-field.component';
 
 @Component({
   selector: 'app-charts-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, PlacePickerComponent],
+  imports: [FormsModule, RouterLink, PlacePickerComponent, DateFieldComponent],
   template: `
     <section class="hero">
       <h1>{{ i18n.t('charts.title') }}</h1>
@@ -35,16 +36,16 @@ import { PlacePickerComponent } from '../components/place-picker.component';
                  [placeholder]="i18n.t('charts.name.ph')" autocomplete="off" />
         </div>
 
-        <div class="grid-2">
-          <div class="field">
-            <label for="date">{{ i18n.t('charts.date') }}</label>
-            <input id="date" name="date" type="date" [(ngModel)]="form.date" required />
-          </div>
-          <div class="field">
-            <label for="time">{{ i18n.t('charts.time') }}</label>
-            <input id="time" name="time" type="time" [(ngModel)]="form.time" required />
-            <span class="hint">{{ i18n.t('charts.time.hint') }}</span>
-          </div>
+        <div class="field">
+          <label>{{ i18n.t('charts.date') }}</label>
+          <app-date-field [ariaLabel]="i18n.t('charts.date')"
+                          (changed)="form.date = $event" />
+        </div>
+
+        <div class="field">
+          <label for="time">{{ i18n.t('charts.time') }}</label>
+          <input id="time" name="time" type="time" [(ngModel)]="form.time" required />
+          <span class="hint">{{ i18n.t('charts.time.hint') }}</span>
         </div>
 
         <div class="field">
@@ -198,6 +199,7 @@ export class ChartsPage implements OnInit {
   readonly i18n = inject(I18nService);
 
   private readonly picker = viewChild(PlacePickerComponent);
+  private readonly dateField = viewChild(DateFieldComponent);
 
   readonly charts = signal<ChartResponse[]>([]);
   readonly profile = signal<ProfileResponse | null>(null);
@@ -262,6 +264,8 @@ export class ChartsPage implements OnInit {
 
   canSubmit(formInvalid: boolean | null): boolean {
     if (formInvalid) return false;
+    // The date-field is outside ngForm; it sets form.date to '' until valid.
+    if (this.form.date === '') return false;
     const hasLocation = this.city != null
       || (this.form.latitude != null && this.form.longitude != null);
     return hasLocation;
@@ -300,6 +304,7 @@ export class ChartsPage implements OnInit {
         };
         this.city = null;
         this.picker()?.clear();
+        this.dateField()?.clear();
       },
       error: err => {
         this.saving.set(false);
