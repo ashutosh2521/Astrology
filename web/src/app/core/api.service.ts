@@ -1,9 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   ChartResponse,
   CreateChartRequest,
+  GeoResult,
   HealthResponse,
   MatchResponse,
   ProfileResponse,
@@ -53,5 +54,15 @@ export class ApiService {
 
   getChart(id: number): Observable<ChartResponse> {
     return this.http.get<ChartResponse>(`/api/charts/${id}`);
+  }
+
+  /**
+   * Online birthplace lookup — used by the place-picker when a typed place
+   * isn't in the bundled city list. Returns [] (never errors the UI) when the
+   * geocoder is unreachable or disabled.
+   */
+  geocode(query: string): Observable<GeoResult[]> {
+    const params = new HttpParams().set('q', query);
+    return this.http.get<GeoResult[]>('/api/geocode', { params });
   }
 }

@@ -1,16 +1,18 @@
 package codes.ashutoshkumar.kundli.config;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootEngine;
+import codes.ashutoshkumar.kundli.geocode.GeocodingProperties;
 import codes.ashutoshkumar.kundli.manglik.ManglikEngine;
 import java.time.Duration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-@EnableConfigurationProperties(KundliProperties.class)
+@EnableConfigurationProperties({KundliProperties.class, GeocodingProperties.class})
 public class AppConfig {
 
     /**
@@ -47,6 +49,24 @@ public class AppConfig {
         return RestClient.builder()
                 .baseUrl(props.ephemeris().baseUrl())
                 .requestFactory(factory)
+                .build();
+    }
+
+    /**
+     * Client for the external birthplace geocoder (OpenStreetMap Nominatim by
+     * default). Sends an identifying User-Agent on every request — Nominatim's
+     * usage policy rejects requests without one. Timeouts are short so a slow or
+     * unreachable geocoder degrades to bundled results instead of stalling the form.
+     */
+    @Bean
+    public RestClient geocodingRestClient(GeocodingProperties props) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(4));
+        factory.setReadTimeout(Duration.ofSeconds(8));
+        return RestClient.builder()
+                .baseUrl(props.baseUrl())
+                .requestFactory(factory)
+                .defaultHeader(HttpHeaders.USER_AGENT, props.userAgent())
                 .build();
     }
 }

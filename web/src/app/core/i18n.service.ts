@@ -15,6 +15,18 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'health.down': 'Ephemeris: unavailable',
     'footer.note': 'Lahiri ayanamsa · Swiss Ephemeris',
 
+    // ---- Date field (dd · month · yyyy) ----
+    'date.day': 'Day',
+    'date.month': 'Month',
+    'date.year': 'Year',
+    'date.dayPh': 'DD',
+    'date.monthPh': 'Month',
+    'date.yearPh': 'YYYY',
+
+    // ---- Place picker (online lookup) ----
+    'place.searching': 'Searching more places…',
+    'place.online': 'Online result',
+
     'charts.title': 'Birth Charts',
     'charts.intro':
       'Enter the exact birth time — to the minute. The Moon moves ~13° a day, so near a Nakshatra boundary even a small error can change the match.',
@@ -223,6 +235,18 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'health.up': 'पंचांग गणना: पूर्ण सटीक',
     'health.down': 'पंचांग गणना: अनुपलब्ध',
     'footer.note': 'लहिरी अयनांश · स्विस एफ़ेमेरिस',
+
+    // ---- तिथि फ़ील्ड (dd · माह · yyyy) ----
+    'date.day': 'दिन',
+    'date.month': 'माह',
+    'date.year': 'वर्ष',
+    'date.dayPh': 'दिन',
+    'date.monthPh': 'माह',
+    'date.yearPh': 'वर्ष',
+
+    // ---- स्थान खोज (ऑनलाइन) ----
+    'place.searching': 'और स्थान खोजे जा रहे हैं…',
+    'place.online': 'ऑनलाइन परिणाम',
 
     'charts.title': 'जन्म कुंडली',
     'charts.intro':

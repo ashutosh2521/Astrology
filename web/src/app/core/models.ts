@@ -18,6 +18,15 @@ export interface ChartResponse {
   createdAt: string;
 }
 
+/** One place returned by the online birthplace geocoder (`GET /api/geocode`). */
+export interface GeoResult {
+  name: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+}
+
 export interface CreateChartRequest {
   label: string;
   birthLocalDateTime: string;

@@ -4,6 +4,7 @@ import { ApiService } from '../core/api.service';
 import { City } from '../core/cities';
 import { ProfileResponse } from '../core/models';
 import { I18nService } from '../core/i18n.service';
+import { formatIsoDate } from '../components/date-field.component';
 
 interface GirlPayload {
   name: string;
@@ -38,7 +39,7 @@ interface GirlPayload {
             <dd>{{ g.name }}</dd>
 
             <dt>{{ i18n.t('confirm.date') }}</dt>
-            <dd>{{ g.date }}</dd>
+            <dd>{{ displayDate(g.date) }}</dd>
 
             <dt>{{ i18n.t('confirm.time') }}</dt>
             <dd>{{ g.time }}</dd>
@@ -134,6 +135,10 @@ export class ConfirmPage implements OnInit {
       next: p => this.profile.set(p),
       error: () => this.profile.set(null),
     });
+  }
+
+  displayDate(iso: string): string {
+    return formatIsoDate(iso, this.i18n.lang());
   }
 
   placeLabel(c: City): string {
