@@ -32,20 +32,21 @@ public record ManglikStatus(
         String ruleVersion
 ) {
     public ManglikStatus {
-        // Defense in depth: triggeredReferences must be consistent with status.
-        // An engine bug that reports MANGLIK with no triggered references (or
-        // vice versa) would flow all the way into stored match results;
-        // failing loudly at construction time is cheaper than a silently
-        // wrong verdict.
+        // Defense in depth: the coarse NOT_MANGLIK / non-NOT_MANGLIK split must
+        // agree with whether any reference point fired. The finer PARTIAL vs
+        // MANGLIK split (v1.1: exactly-1 vs 2+ triggered) is the ENGINE's job
+        // to enforce — the record stays loose enough that historical results
+        // tagged manglik-v1.0 (only NOT_MANGLIK / MANGLIK, single-trigger =
+        // MANGLIK) still deserialize successfully from stored JSON.
         boolean anyTriggered =
                 fromLagna.present() || fromMoon.present() || fromVenus.present();
-        if (status == ManglikState.MANGLIK && !anyTriggered) {
-            throw new IllegalStateException(
-                    "status=MANGLIK requires at least one reference point to have present=true");
-        }
         if (status == ManglikState.NOT_MANGLIK && anyTriggered) {
             throw new IllegalStateException(
                     "status=NOT_MANGLIK requires all reference points to have present=false");
+        }
+        if (status != ManglikState.NOT_MANGLIK && !anyTriggered) {
+            throw new IllegalStateException(
+                    "status=" + status + " requires at least one reference point to have present=true");
         }
         triggeredReferences = List.copyOf(triggeredReferences);
         cancellations = List.copyOf(cancellations);

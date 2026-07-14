@@ -39,9 +39,13 @@ class ManglikEngineTest {
 
     @Test
     void loadsAndValidatesRulesAtConstruction() {
-        assertEquals("manglik-v1.0", engine.ruleVersion());
+        assertEquals("manglik-v1.1", engine.ruleVersion());
         // The exact v1 trigger houses fixed by the spec.
         assertEquals(Set.of(1, 2, 4, 7, 8, 12), engine.triggerHouses());
+        // v1.1 grading buckets: {1} → PARTIAL, {2, 3} → full MANGLIK.
+        // NOT_MANGLIK (count 0) is implicit.
+        assertEquals(Set.of(1), engine.partialManglikCounts());
+        assertEquals(Set.of(2, 3), engine.fullManglikCounts());
     }
 
     // ---- Per-house presence: 12 × 3 = 36 combinations exhaustive ----
@@ -144,16 +148,18 @@ class ManglikEngineTest {
     }
 
     @Test
-    void triggeredFromLagnaOnly() {
+    void singleReferenceTriggeredIsPartialManglik() {
         // Mars in 8th from Lagna (Mesha lagna → Mars in Vrishchika = 8th house).
         // Moon and Venus placed so Mars lands in non-trigger house 3 from each.
+        // Exactly one reference triggered → PARTIAL_MANGLIK (Anshik) per manglik-v1.1.
         ManglikStatus s = engine.evaluate(
                 midOfRashi(1),      // Lagna Mesha
                 6,                  // Moon Kanya  → Mars in Vrishchika is 3rd from Kanya (safe)
                 midOfRashi(8),      // Mars Vrishchika → 8th from Lagna (trigger)
                 midOfRashi(6));     // Venus Kanya → Mars in Vrishchika is 3rd from Kanya (safe)
 
-        assertEquals(ManglikState.MANGLIK, s.status());
+        assertEquals(ManglikState.PARTIAL_MANGLIK, s.status(),
+                "exactly one triggered reference → PARTIAL_MANGLIK (Anshik) in v1.1");
         assertEquals(List.of(ReferencePoint.LAGNA), s.triggeredReferences());
         assertTrue(s.fromLagna().present());
         assertFalse(s.fromMoon().present());
@@ -162,9 +168,29 @@ class ManglikEngineTest {
     }
 
     @Test
-    void triggeredFromAllThreeReferencesReportsAll() {
+    void twoReferencesTriggeredIsFullManglik() {
+        // Ascendant Mesha, Moon Mesha (so Mars-in-Vrishchika triggers both);
+        // Venus in Kanya so Mars is in 3rd from Venus (safe).
+        ManglikStatus s = engine.evaluate(
+                midOfRashi(1),      // Lagna Mesha
+                1,                  // Moon Mesha  → same as Lagna
+                midOfRashi(8),      // Mars Vrishchika → 8th from Mesha (trigger from both)
+                midOfRashi(6));     // Venus Kanya → 3rd from Kanya (safe)
+
+        assertEquals(ManglikState.MANGLIK, s.status(),
+                "two triggered references → full MANGLIK in v1.1");
+        assertEquals(
+                List.of(ReferencePoint.LAGNA, ReferencePoint.MOON),
+                s.triggeredReferences());
+        assertTrue(s.fromLagna().present());
+        assertTrue(s.fromMoon().present());
+        assertFalse(s.fromVenus().present());
+    }
+
+    @Test
+    void threeReferencesTriggeredIsFullManglik() {
         // Ascendant, Moon and Venus all in Mesha; Mars in Karka (Rashi 4).
-        // Mars in 4th from all three → all trigger.
+        // Mars in 4th from all three → all trigger → full MANGLIK.
         ManglikStatus s = engine.evaluate(
                 midOfRashi(1), 1, midOfRashi(4), midOfRashi(1));
 
@@ -180,7 +206,7 @@ class ManglikEngineTest {
     @Test
     void ruleVersionIsAttachedToEveryResult() {
         ManglikStatus s = engine.evaluate(midOfRashi(1), 1, midOfRashi(3), midOfRashi(1));
-        assertEquals("manglik-v1.0", s.ruleVersion());
+        assertEquals("manglik-v1.1", s.ruleVersion());
         assertTrue(s.cancellations().isEmpty(),
                 "v1 must not emit any cancellations");
     }
@@ -192,7 +218,40 @@ class ManglikEngineTest {
         ManglikStatus safe = engine.evaluate(midOfRashi(1), 1, midOfRashi(3), midOfRashi(1));
         ManglikCompatibility c = engine.combine(safe, safe);
         assertEquals(ManglikCompatibility.Compatibility.NEITHER_MANGLIK, c.compatibility());
-        assertEquals("manglik-v1.0", c.ruleVersion());
+        assertEquals("manglik-v1.1", c.ruleVersion());
+    }
+
+    /**
+     * Anshik Manglik (partial, one reference triggered) is still not "safe"
+     * for a couple result. Any Manglik presence — full or partial — routes
+     * to detailed review. The spec's "do not automatically declare Manglik-
+     * Manglik safe" applies to Anshik too.
+     */
+    @Test
+    void partialManglikPartnerStillRequiresDetailedReview() {
+        // Person A: partial Manglik (single reference triggered).
+        ManglikStatus partial = engine.evaluate(
+                midOfRashi(1), 6, midOfRashi(8), midOfRashi(6));
+        assertEquals(ManglikState.PARTIAL_MANGLIK, partial.status(),
+                "sanity: constructed partial-Manglik case");
+
+        // Person B: fully clean.
+        ManglikStatus safe = engine.evaluate(midOfRashi(1), 1, midOfRashi(3), midOfRashi(1));
+
+        ManglikCompatibility c = engine.combine(partial, safe);
+        assertEquals(ManglikCompatibility.Compatibility.REQUIRES_DETAILED_REVIEW,
+                c.compatibility(),
+                "one partial + one clean must still route to detailed review — Anshik is not safe");
+    }
+
+    @Test
+    void bothPartialManglikStillRequiresDetailedReview() {
+        ManglikStatus partial = engine.evaluate(
+                midOfRashi(1), 6, midOfRashi(8), midOfRashi(6));
+        ManglikCompatibility c = engine.combine(partial, partial);
+        assertEquals(ManglikCompatibility.Compatibility.REQUIRES_DETAILED_REVIEW,
+                c.compatibility(),
+                "two Anshik-Manglik partners must never be auto-declared safe");
     }
 
     /**

@@ -1,7 +1,7 @@
 {
   "verified": true,
-  "source": "Basic Manglik / Kuja / Mangal Dosha PRESENCE check per the classical Parashari convention: Mars placed in specific houses from a reference point flags the dosha. This v1.0 rule set is fixed by the app spec (docs/spec.md and the user's Milestone brief) as: three reference points (Lagna, Moon, Venus) and six trigger houses (1, 2, 4, 7, 8, 12). This is the standard set BV Raman ('Muhurtha') and Drik Panchang use.",
-  "ruleVersion": "manglik-v1.0",
+  "source": "Basic Manglik / Kuja / Mangal Dosha PRESENCE check per the classical Parashari convention: Mars placed in specific houses from a reference point flags the dosha. This v1.1 rule set is fixed by the app spec (docs/spec.md and the user's Milestone brief) as: three reference points (Lagna, Moon, Venus) and six trigger houses (1, 2, 4, 7, 8, 12). v1.1 adds PARTIAL_MANGLIK (Anshik) grading based on the number of triggered reference points, per the widely-used Indian marriage-matching convention.",
+  "ruleVersion": "manglik-v1.1",
   "houseSystem": "WHOLE_SIGN",
   "houseSystemNote": "Whole-sign house math: house = ((grahaRashi - refRashi + 12) % 12) + 1. Uses only the sidereal longitudes stored on birth_charts (ascendantLongitude, marsLongitude, venusLongitude, moonRashiNumber). No Placidus cusp dependency, no additional ephemeris call at match time.",
 
@@ -9,12 +9,19 @@
   "referencePointsNote": "'LAGNA' is the Ascendant. 'MOON' is Chandra Lagna (Mars house counted from the Moon's sign). 'VENUS' is Shukra Lagna (Mars house counted from Venus's sign).",
 
   "triggerHouses": [1, 2, 4, 7, 8, 12],
-  "triggerHousesNote": "The classical Kuja Dosha houses. Some traditions treat house 2 or 8 differently (mild/severe); v1 treats all six identically. Advanced strength-based grading is a v1.1 concern.",
+  "triggerHousesNote": "The classical Kuja Dosha houses. Some traditions treat house 2 or 8 differently (mild/severe); v1 treats all six identically. Advanced strength-based grading of individual houses is out of scope; PARTIAL_MANGLIK is currently based on reference-point count only.",
+
+  "grading": {
+    "rule": "COUNT_OF_TRIGGERED_REFERENCES",
+    "notManglikWhenTriggeredCount": 0,
+    "partialManglikWhenTriggeredCount": [1],
+    "manglikWhenTriggeredCount": [2, 3]
+  },
+  "gradingNote": "'Anshik Manglik' (अंशिक मंगल दोष) — the most widely-used partial-Manglik convention in Indian marriage matching. Presence from exactly one of the three reference points is treated as partial; presence from two or three is full Manglik. This is a modern practical simplification of the classical principle that Mars affliction reduces in severity when it appears from fewer sources. Adopted from common Indian matrimonial practice (used by AstroSage and most matchmaking apps); not tied to a single classical text.",
 
   "cancellationsImplemented": false,
-  "cancellationsNote": "Advanced Manglik cancellation rules (age-based, aspect-based, exalted-Mars, Mars-in-own-sign, benefic aspect on Mars, Manglik-Manglik nullification, dosha-bhanga yogas etc.) are TRADITION-VARIABLE and NOT implemented in v1. The app must not automatically declare a Manglik-Manglik match safe. Any Manglik presence requires expert review before a conclusion is drawn.",
+  "cancellationsNote": "Advanced Manglik cancellation rules (age-based, aspect-based, exalted-Mars, Mars-in-own-sign, benefic aspect on Mars, Manglik-Manglik nullification, dosha-bhanga yogas etc.) are TRADITION-VARIABLE and NOT implemented. The app must not automatically declare a Manglik-Manglik or Partial-Manglik match safe. Any Manglik presence (full or partial) requires expert review before a conclusion is drawn.",
 
-  "statusesEmittedInV1": ["NOT_MANGLIK", "MANGLIK"],
-  "statusesReservedForV1_1": ["PARTIAL_MANGLIK"],
-  "statusesNote": "PARTIAL_MANGLIK is reserved in the enum for a future v1.1 that grades Manglik strength (e.g. presence in only 1 of 3 reference points, or in mild-strength houses). V1 emits only NOT_MANGLIK / MANGLIK to avoid inventing an ungrounded strength scale."
+  "statusesEmittedInV1_1": ["NOT_MANGLIK", "PARTIAL_MANGLIK", "MANGLIK"],
+  "statusesNote": "v1.0 emitted only NOT_MANGLIK / MANGLIK. v1.1 adds PARTIAL_MANGLIK via the grading rule above. Historical results tagged 'manglik-v1.0' remain readable and keep their original two-state grading; the metadata on each stored MatchRecord preserves the rule version that produced it."
 }

@@ -37,10 +37,15 @@ public final class ManglikEngine {
 
     private final String ruleVersion;
     private final Set<Integer> triggerHouses;
+    private final Set<Integer> partialManglikCounts;
+    private final Set<Integer> fullManglikCounts;
 
-    ManglikEngine(String ruleVersion, Set<Integer> triggerHouses) {
+    ManglikEngine(String ruleVersion, Set<Integer> triggerHouses,
+                  Set<Integer> partialManglikCounts, Set<Integer> fullManglikCounts) {
         this.ruleVersion = ruleVersion;
         this.triggerHouses = Set.copyOf(triggerHouses);
+        this.partialManglikCounts = Set.copyOf(partialManglikCounts);
+        this.fullManglikCounts = Set.copyOf(fullManglikCounts);
     }
 
     /** Load rules from the classpath JSON and construct a ready engine. */
@@ -68,7 +73,58 @@ public final class ManglikEngine {
             }
             triggerHouses.add(v);
         }
-        return new ManglikEngine(ruleVersion, triggerHouses);
+
+        JsonNode grading = root.get("grading");
+        Set<Integer> partialCounts = intSet(grading, "partialManglikWhenTriggeredCount");
+        Set<Integer> fullCounts = intSet(grading, "manglikWhenTriggeredCount");
+        // Defense: the three trigger-count buckets must partition {0..3}
+        // (NOT_MANGLIK is implicitly 0). A rules-file bug that overlaps or
+        // leaves a count unassigned would silently produce an inconsistent
+        // grading; catch it at boot.
+        Set<Integer> covered = new java.util.HashSet<>();
+        covered.add(0);
+        for (Integer n : partialCounts) {
+            if (!covered.add(n)) {
+                throw new IllegalStateException(
+                        "manglik_rules.json grading: triggered count " + n
+                        + " assigned to more than one bucket");
+            }
+        }
+        for (Integer n : fullCounts) {
+            if (!covered.add(n)) {
+                throw new IllegalStateException(
+                        "manglik_rules.json grading: triggered count " + n
+                        + " assigned to more than one bucket");
+            }
+        }
+        for (int n = 0; n <= 3; n++) {
+            if (!covered.contains(n)) {
+                throw new IllegalStateException(
+                        "manglik_rules.json grading: triggered count " + n
+                        + " not assigned to any bucket");
+            }
+        }
+        return new ManglikEngine(ruleVersion, triggerHouses, partialCounts, fullCounts);
+    }
+
+    private static Set<Integer> intSet(JsonNode parent, String field) {
+        if (parent == null || !parent.hasNonNull(field)) {
+            throw new IllegalStateException("manglik_rules.json missing grading." + field);
+        }
+        JsonNode arr = parent.get(field);
+        if (!arr.isArray()) {
+            throw new IllegalStateException("manglik_rules.json grading." + field + " must be an array");
+        }
+        Set<Integer> out = new java.util.HashSet<>();
+        for (JsonNode n : arr) {
+            int v = n.asInt(-1);
+            if (v < 0 || v > 3) {
+                throw new IllegalStateException(
+                        "manglik_rules.json grading." + field + " entry out of range 0..3: " + v);
+            }
+            out.add(v);
+        }
+        return out;
     }
 
     private static JsonNode read(ObjectMapper om) {
@@ -104,6 +160,16 @@ public final class ManglikEngine {
         return triggerHouses;
     }
 
+    /** For test introspection: which triggered-count values map to PARTIAL_MANGLIK. */
+    Set<Integer> partialManglikCounts() {
+        return partialManglikCounts;
+    }
+
+    /** For test introspection: which triggered-count values map to full MANGLIK. */
+    Set<Integer> fullManglikCounts() {
+        return fullManglikCounts;
+    }
+
     /**
      * Evaluate one person.
      *
@@ -136,10 +202,24 @@ public final class ManglikEngine {
         if (fromMoon.present()) triggered.add(ReferencePoint.MOON);
         if (fromVenus.present()) triggered.add(ReferencePoint.VENUS);
 
-        ManglikState state = triggered.isEmpty() ? ManglikState.NOT_MANGLIK : ManglikState.MANGLIK;
+        ManglikState state = gradeByTriggeredCount(triggered.size());
 
         return new ManglikStatus(
                 state, fromLagna, fromMoon, fromVenus, triggered, List.of(), ruleVersion);
+    }
+
+    /**
+     * Grade per-person state from the number of triggered reference points,
+     * using the buckets loaded from {@code manglik_rules.json}. Every count
+     * 0..3 lands in exactly one bucket (validated at construction time).
+     */
+    private ManglikState gradeByTriggeredCount(int count) {
+        if (count == 0) return ManglikState.NOT_MANGLIK;
+        if (partialManglikCounts.contains(count)) return ManglikState.PARTIAL_MANGLIK;
+        if (fullManglikCounts.contains(count)) return ManglikState.MANGLIK;
+        // Unreachable: partition validated at load.
+        throw new IllegalStateException(
+                "Unassigned triggered count in Manglik grading: " + count);
     }
 
     /**

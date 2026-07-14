@@ -83,13 +83,13 @@ class ApiIntegrationTest {
                 .andExpect(jsonPath("$.ruleMetadata.matchingSystem").value("NORTH_INDIAN_ASHTAKOOTA"))
                 .andExpect(jsonPath("$.ruleMetadata.ashtakootaRuleVersion")
                         .value(containsString("provisional")))
-                .andExpect(jsonPath("$.ruleMetadata.manglikRuleVersion").value("manglik-v1.0"))
+                .andExpect(jsonPath("$.ruleMetadata.manglikRuleVersion").value("manglik-v1.1"))
                 // Manglik result now populated on every new match — both partners
                 // and the couple compatibility must appear on the wire.
                 .andExpect(jsonPath("$.manglik.personA.status").exists())
                 .andExpect(jsonPath("$.manglik.personB.status").exists())
                 .andExpect(jsonPath("$.manglik.compatibility").exists())
-                .andExpect(jsonPath("$.manglik.ruleVersion").value("manglik-v1.0"))
+                .andExpect(jsonPath("$.manglik.ruleVersion").value("manglik-v1.1"))
                 .andExpect(jsonPath("$.ruleMetadata.ephemerisMode").value("SWISS_EPHEMERIS_FULL"))
                 .andReturn();
 
