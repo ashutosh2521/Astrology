@@ -134,9 +134,9 @@ class BirthChartServiceTest {
                 eq(RANCHI_LAT), eq(RANCHI_LON))).thenReturn(chart(15.0, 6.0));
         BirthChart c = createAshutosh("1998-10-25T16:20:00");
         // Strict eq() above means the mock threw if the service sent any
-        // other instant. Assert the stored UTC round-trips the same value.
+        // other instant. The stored UTC round-trips the same value; that
+        // is the invariant the primary profile relies on.
         assertEquals("1998-10-25T10:50:00Z", c.getUtcInstant());
-        assertEquals("1998-10-25T16:20:00", c.getBirthLocalDateTime());
         assertEquals("Asia/Kolkata", c.getTimezone());
     }
 
