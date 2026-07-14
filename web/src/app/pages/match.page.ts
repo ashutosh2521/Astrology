@@ -7,11 +7,12 @@ import { I18nService } from '../core/i18n.service';
 import { ScoreRingComponent } from '../components/score-ring.component';
 import { KootaBarsComponent } from '../components/koota-bars.component';
 import { DoshaCardComponent } from '../components/dosha-card.component';
+import { ManglikCardComponent } from '../components/manglik-card.component';
 
 @Component({
   selector: 'app-match-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, ScoreRingComponent, KootaBarsComponent, DoshaCardComponent],
+  imports: [FormsModule, RouterLink, ScoreRingComponent, KootaBarsComponent, DoshaCardComponent, ManglikCardComponent],
   template: `
     <section class="hero">
       <h1>{{ i18n.t('match.title') }}</h1>
@@ -103,6 +104,13 @@ import { DoshaCardComponent } from '../components/dosha-card.component';
               }
             </div>
           </div>
+
+          @if (m.manglik) {
+            <app-manglik-card
+              [manglik]="m.manglik"
+              [boyLabel]="m.boyLabel"
+              [girlLabel]="m.girlLabel" />
+          }
         </section>
       }
     }

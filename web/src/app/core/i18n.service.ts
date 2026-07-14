@@ -63,6 +63,7 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'match.err.load': 'Could not load charts.',
     'match.kootas': 'Koota breakdown',
     'match.doshas': 'Doshas',
+    'match.manglik': 'Manglik (Mangal Dosha)',
     'match.rules': 'Rule set',
 
     'score.of': 'of {max}',
@@ -78,6 +79,24 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'dosha.none': 'No {name} dosha',
     'dosha.cancelled': '{name} dosha cancelled',
     'dosha.applies': '{name} dosha applies',
+
+    // ---- Manglik (Kuja / Mangal Dosha) ----
+    'manglik.personA': '{name}',
+    'manglik.personB': '{name}',
+    'manglik.state.NOT_MANGLIK': 'Not Manglik',
+    'manglik.state.MANGLIK': 'Manglik',
+    'manglik.state.PARTIAL_MANGLIK': 'Partial Manglik',
+    'manglik.ref.LAGNA': 'Ascendant',
+    'manglik.ref.MOON': 'Moon',
+    'manglik.ref.VENUS': 'Venus',
+    'manglik.house.n': 'Mars in house {n}',
+    'manglik.house.trigger': 'Mars in house {n} — Manglik',
+    'manglik.triggered.none': 'No Manglik from any reference',
+    'manglik.triggered.list': 'Manglik from {refs}',
+    'manglik.compat.NEITHER_MANGLIK': 'Neither partner is Manglik',
+    'manglik.compat.REQUIRES_DETAILED_REVIEW': 'Detailed review required',
+    'manglik.rules': 'Manglik rule set',
+    'manglik.note': 'Version 1 checks Mars in houses 1, 2, 4, 7, 8, 12 from Lagna, Moon and Venus. Advanced cancellation rules are NOT included — an astrologer should review any Manglik presence.',
   },
   hi: {
     'brand.sub': 'वैदिक कुंडली मिलान',
@@ -135,6 +154,7 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'match.err.load': 'कुंडली लोड नहीं हो सकीं।',
     'match.kootas': 'कूट विवरण',
     'match.doshas': 'दोष',
+    'match.manglik': 'मंगल दोष',
     'match.rules': 'नियम संस्करण',
 
     'score.of': '{max} में से',
@@ -150,6 +170,24 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'dosha.none': '{name} दोष नहीं है',
     'dosha.cancelled': '{name} दोष निरस्त (भंग)',
     'dosha.applies': '{name} दोष लागू है',
+
+    // ---- मंगल दोष ----
+    'manglik.personA': '{name}',
+    'manglik.personB': '{name}',
+    'manglik.state.NOT_MANGLIK': 'मंगल दोष नहीं',
+    'manglik.state.MANGLIK': 'मंगल दोष है',
+    'manglik.state.PARTIAL_MANGLIK': 'आंशिक मंगल दोष',
+    'manglik.ref.LAGNA': 'लग्न',
+    'manglik.ref.MOON': 'चंद्र',
+    'manglik.ref.VENUS': 'शुक्र',
+    'manglik.house.n': 'मंगल {n} भाव में',
+    'manglik.house.trigger': 'मंगल {n} भाव में — दोष',
+    'manglik.triggered.none': 'किसी भी संदर्भ से मंगल दोष नहीं',
+    'manglik.triggered.list': '{refs} से मंगल दोष',
+    'manglik.compat.NEITHER_MANGLIK': 'दोनों में मंगल दोष नहीं है',
+    'manglik.compat.REQUIRES_DETAILED_REVIEW': 'विस्तृत जांच आवश्यक',
+    'manglik.rules': 'मंगल दोष नियम',
+    'manglik.note': 'यह प्रारंभिक जांच है — मंगल का 1, 2, 4, 7, 8, 12 भाव (लग्न, चंद्र और शुक्र से) देखा जाता है। दोष निरस्त (भंग) करने वाले जटिल नियम शामिल नहीं हैं; मंगल दोष होने पर किसी अनुभवी ज्योतिषी से विस्तृत जांच कराएँ।',
   },
 };
 

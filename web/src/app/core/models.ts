@@ -96,6 +96,45 @@ export interface RuleMetadata {
   ephemerisMode: string;            // e.g. "SWISS_EPHEMERIS_FULL"
 }
 
+// ---------------- Manglik (Kuja Dosha) ----------------
+//
+// Mirrors codes.ashutoshkumar.kundli.manglik.* on the backend. Same
+// "engine emits codes, frontend translates" split as the Ashtakoot side.
+
+/** Per-person Manglik overall state. v1 emits NOT_MANGLIK / MANGLIK only. */
+export type ManglikState = 'NOT_MANGLIK' | 'MANGLIK' | 'PARTIAL_MANGLIK';
+
+/** One of the three reference points from which Mars's house is counted. */
+export type ManglikReference = 'LAGNA' | 'MOON' | 'VENUS';
+
+/**
+ * Mars house from a single reference point, and whether that house is one
+ * of the v1 trigger houses ({1, 2, 4, 7, 8, 12}).
+ */
+export interface ReferencePointResult {
+  marsHouse: number;  // 1..12
+  present: boolean;
+}
+
+/** Per-person Manglik result — the structured shape the app spec requires. */
+export interface ManglikStatus {
+  status: ManglikState;
+  fromLagna: ReferencePointResult;
+  fromMoon: ReferencePointResult;
+  fromVenus: ReferencePointResult;
+  triggeredReferences: ManglikReference[];
+  cancellations: string[];   // empty in v1
+  ruleVersion: string;       // "manglik-v1.0"
+}
+
+/** Couple-level Manglik verdict. */
+export interface ManglikCompatibility {
+  personA: ManglikStatus;
+  personB: ManglikStatus;
+  compatibility: 'NEITHER_MANGLIK' | 'REQUIRES_DETAILED_REVIEW';
+  ruleVersion: string;
+}
+
 export interface MatchResponse {
   id: number;
   boyChartId: number;
@@ -103,6 +142,8 @@ export interface MatchResponse {
   boyLabel: string | null;
   girlLabel: string | null;
   result: AshtakootResult;
+  /** Null only on legacy records that predate Ascendant/Mars/Venus storage. */
+  manglik: ManglikCompatibility | null;
   /** Backward-compat: same value as ruleMetadata.ashtakootaRuleVersion. */
   rulesVersion: string;
   ruleMetadata: RuleMetadata;
