@@ -43,6 +43,9 @@ import { I18nService } from '../core/i18n.service';
             <li>{{ refLine('MOON',   manglik().personA) }}</li>
             <li>{{ refLine('VENUS',  manglik().personA) }}</li>
           </ul>
+          @for (c of manglik().personA.cancellations; track c) {
+            <p class="cancel small">{{ i18n.t('manglik.cancellation.' + c) }}</p>
+          }
         </section>
 
         <section class="person">
@@ -57,6 +60,9 @@ import { I18nService } from '../core/i18n.service';
             <li>{{ refLine('MOON',   manglik().personB) }}</li>
             <li>{{ refLine('VENUS',  manglik().personB) }}</li>
           </ul>
+          @for (c of manglik().personB.cancellations; track c) {
+            <p class="cancel small">{{ i18n.t('manglik.cancellation.' + c) }}</p>
+          }
         </section>
       </div>
 
@@ -116,6 +122,13 @@ import { I18nService } from '../core/i18n.service';
       color: var(--ink-2);
     }
     .refs li { padding: 2px 0; }
+
+    .cancel {
+      margin: 6px 0 0;
+      color: var(--good);
+      font-weight: 600;
+      font-size: 12px;
+    }
 
     .manglik__note {
       margin: 10px 0 6px;

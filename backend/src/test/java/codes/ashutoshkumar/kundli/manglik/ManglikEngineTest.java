@@ -39,13 +39,20 @@ class ManglikEngineTest {
 
     @Test
     void loadsAndValidatesRulesAtConstruction() {
-        assertEquals("manglik-v1.1", engine.ruleVersion());
+        assertEquals("manglik-v1.2", engine.ruleVersion());
         // The exact v1 trigger houses fixed by the spec.
         assertEquals(Set.of(1, 2, 4, 7, 8, 12), engine.triggerHouses());
         // v1.1 grading buckets: {1} → PARTIAL, {2, 3} → full MANGLIK.
         // NOT_MANGLIK (count 0) is implicit.
         assertEquals(Set.of(1), engine.partialManglikCounts());
         assertEquals(Set.of(2, 3), engine.fullManglikCounts());
+        // v1.2 Mars-strength cancellations: Mesha (1) + Vrishchika (8) = own;
+        // Makara (10) = exalted; Karka (4) = debilitated.
+        assertEquals("MARS_IN_OWN_SIGN", engine.cancellationByMarsSign().get(1));
+        assertEquals("MARS_IN_OWN_SIGN", engine.cancellationByMarsSign().get(8));
+        assertEquals("MARS_EXALTED", engine.cancellationByMarsSign().get(10));
+        assertEquals("MARS_DEBILITATED", engine.cancellationByMarsSign().get(4));
+        assertEquals(4, engine.cancellationByMarsSign().size());
     }
 
     // ---- Per-house presence: 12 × 3 = 36 combinations exhaustive ----
@@ -149,36 +156,40 @@ class ManglikEngineTest {
 
     @Test
     void singleReferenceTriggeredIsPartialManglik() {
-        // Mars in 8th from Lagna (Mesha lagna → Mars in Vrishchika = 8th house).
-        // Moon and Venus placed so Mars lands in non-trigger house 3 from each.
-        // Exactly one reference triggered → PARTIAL_MANGLIK (Anshik) per manglik-v1.1.
+        // Mars in Vrishabha (2 — NOT a cancellation sign, so Anshik still fires):
+        //   from Lagna Mesha → house 2 (trigger)
+        //   from Moon Kanya → house 9 (not trigger)
+        //   from Venus Kanya → house 9 (not trigger)
+        // Exactly one reference triggered → PARTIAL_MANGLIK (Anshik).
         ManglikStatus s = engine.evaluate(
                 midOfRashi(1),      // Lagna Mesha
-                6,                  // Moon Kanya  → Mars in Vrishchika is 3rd from Kanya (safe)
-                midOfRashi(8),      // Mars Vrishchika → 8th from Lagna (trigger)
-                midOfRashi(6));     // Venus Kanya → Mars in Vrishchika is 3rd from Kanya (safe)
+                6,                  // Moon Kanya
+                midOfRashi(2),      // Mars Vrishabha → 2nd from Lagna (trigger)
+                midOfRashi(6));     // Venus Kanya
 
         assertEquals(ManglikState.PARTIAL_MANGLIK, s.status(),
-                "exactly one triggered reference → PARTIAL_MANGLIK (Anshik) in v1.1");
+                "exactly one triggered reference → PARTIAL_MANGLIK (Anshik)");
         assertEquals(List.of(ReferencePoint.LAGNA), s.triggeredReferences());
         assertTrue(s.fromLagna().present());
         assertFalse(s.fromMoon().present());
         assertFalse(s.fromVenus().present());
-        assertEquals(8, s.fromLagna().marsHouse());
+        assertEquals(2, s.fromLagna().marsHouse());
+        assertTrue(s.cancellations().isEmpty(),
+                "Mars in Vrishabha is not a cancellation sign");
     }
 
     @Test
     void twoReferencesTriggeredIsFullManglik() {
-        // Ascendant Mesha, Moon Mesha (so Mars-in-Vrishchika triggers both);
-        // Venus in Kanya so Mars is in 3rd from Venus (safe).
+        // Ascendant Mesha, Moon Mesha (so Mars-in-Vrishabha triggers both);
+        // Venus in Kanya so Mars in 9th from Venus (safe).
         ManglikStatus s = engine.evaluate(
                 midOfRashi(1),      // Lagna Mesha
                 1,                  // Moon Mesha  → same as Lagna
-                midOfRashi(8),      // Mars Vrishchika → 8th from Mesha (trigger from both)
-                midOfRashi(6));     // Venus Kanya → 3rd from Kanya (safe)
+                midOfRashi(2),      // Mars Vrishabha → 2nd from Mesha (trigger from both)
+                midOfRashi(6));     // Venus Kanya
 
         assertEquals(ManglikState.MANGLIK, s.status(),
-                "two triggered references → full MANGLIK in v1.1");
+                "two triggered references → full MANGLIK");
         assertEquals(
                 List.of(ReferencePoint.LAGNA, ReferencePoint.MOON),
                 s.triggeredReferences());
@@ -189,26 +200,27 @@ class ManglikEngineTest {
 
     @Test
     void threeReferencesTriggeredIsFullManglik() {
-        // Ascendant, Moon and Venus all in Mesha; Mars in Karka (Rashi 4).
-        // Mars in 4th from all three → all trigger → full MANGLIK.
+        // Ascendant, Moon and Venus all in Mesha; Mars in Vrishabha (Rashi 2).
+        // Mars in 2nd from all three → all trigger → full MANGLIK.
+        // (Vrishabha is chosen because 4 (Karka) is a debilitation cancellation.)
         ManglikStatus s = engine.evaluate(
-                midOfRashi(1), 1, midOfRashi(4), midOfRashi(1));
+                midOfRashi(1), 1, midOfRashi(2), midOfRashi(1));
 
         assertEquals(ManglikState.MANGLIK, s.status());
         assertEquals(
                 List.of(ReferencePoint.LAGNA, ReferencePoint.MOON, ReferencePoint.VENUS),
                 s.triggeredReferences());
-        assertEquals(4, s.fromLagna().marsHouse());
-        assertEquals(4, s.fromMoon().marsHouse());
-        assertEquals(4, s.fromVenus().marsHouse());
+        assertEquals(2, s.fromLagna().marsHouse());
+        assertEquals(2, s.fromMoon().marsHouse());
+        assertEquals(2, s.fromVenus().marsHouse());
     }
 
     @Test
     void ruleVersionIsAttachedToEveryResult() {
         ManglikStatus s = engine.evaluate(midOfRashi(1), 1, midOfRashi(3), midOfRashi(1));
-        assertEquals("manglik-v1.1", s.ruleVersion());
+        assertEquals("manglik-v1.2", s.ruleVersion());
         assertTrue(s.cancellations().isEmpty(),
-                "v1 must not emit any cancellations");
+                "Mars in Mithuna is not a cancellation sign — cancellations empty");
     }
 
     // ---- Couple combine ----
@@ -218,7 +230,7 @@ class ManglikEngineTest {
         ManglikStatus safe = engine.evaluate(midOfRashi(1), 1, midOfRashi(3), midOfRashi(1));
         ManglikCompatibility c = engine.combine(safe, safe);
         assertEquals(ManglikCompatibility.Compatibility.NEITHER_MANGLIK, c.compatibility());
-        assertEquals("manglik-v1.1", c.ruleVersion());
+        assertEquals("manglik-v1.2", c.ruleVersion());
     }
 
     /**
@@ -229,9 +241,10 @@ class ManglikEngineTest {
      */
     @Test
     void partialManglikPartnerStillRequiresDetailedReview() {
-        // Person A: partial Manglik (single reference triggered).
+        // Person A: partial Manglik. Mars in Vrishabha (2 — non-cancel), Lagna
+        // Mesha → house 2 (trigger); Moon and Venus in Kanya (6) → house 9 (safe).
         ManglikStatus partial = engine.evaluate(
-                midOfRashi(1), 6, midOfRashi(8), midOfRashi(6));
+                midOfRashi(1), 6, midOfRashi(2), midOfRashi(6));
         assertEquals(ManglikState.PARTIAL_MANGLIK, partial.status(),
                 "sanity: constructed partial-Manglik case");
 
@@ -247,7 +260,7 @@ class ManglikEngineTest {
     @Test
     void bothPartialManglikStillRequiresDetailedReview() {
         ManglikStatus partial = engine.evaluate(
-                midOfRashi(1), 6, midOfRashi(8), midOfRashi(6));
+                midOfRashi(1), 6, midOfRashi(2), midOfRashi(6));
         ManglikCompatibility c = engine.combine(partial, partial);
         assertEquals(ManglikCompatibility.Compatibility.REQUIRES_DETAILED_REVIEW,
                 c.compatibility(),
@@ -256,15 +269,19 @@ class ManglikEngineTest {
 
     /**
      * The spec's core anti-pattern: two Manglik partners must NOT be auto-declared safe.
-     * The classical "Manglik-Manglik cancel" folk rule is deliberately not applied in v1.
+     * The classical "Manglik-Manglik cancel" folk rule is deliberately not applied.
      */
     @Test
     void bothManglikStillRequiresDetailedReview() {
-        ManglikStatus manglik = engine.evaluate(midOfRashi(1), 1, midOfRashi(8), midOfRashi(1));
+        // Mars in Vrishabha (2 — non-cancel), Lagna+Moon+Venus in Mesha → house 2
+        // from all three → three triggers → full MANGLIK.
+        ManglikStatus manglik = engine.evaluate(midOfRashi(1), 1, midOfRashi(2), midOfRashi(1));
+        assertEquals(ManglikState.MANGLIK, manglik.status(),
+                "sanity: constructed full-Manglik case");
         ManglikCompatibility c = engine.combine(manglik, manglik);
         assertEquals(ManglikCompatibility.Compatibility.REQUIRES_DETAILED_REVIEW,
                 c.compatibility(),
-                "Two Manglik partners must never be auto-declared compatible in v1");
+                "Two Manglik partners must never be auto-declared compatible");
     }
 
     @ParameterizedTest(name = "personA={0} personB={1} → detailed review")
@@ -282,7 +299,8 @@ class ManglikEngineTest {
 
     private ManglikStatus manglikOrSafe(String state) {
         return switch (state) {
-            case "MANGLIK"     -> engine.evaluate(midOfRashi(1), 1, midOfRashi(8), midOfRashi(1));
+            // Vrishabha (2) — non-cancel, gives triggers from Mesha lagna/moon/venus.
+            case "MANGLIK"     -> engine.evaluate(midOfRashi(1), 1, midOfRashi(2), midOfRashi(1));
             case "NOT_MANGLIK" -> engine.evaluate(midOfRashi(1), 1, midOfRashi(3), midOfRashi(1));
             default -> throw new IllegalArgumentException("unknown state: " + state);
         };
@@ -314,5 +332,92 @@ class ManglikEngineTest {
         // Ascendant in Meena (12); Mars in Mithuna (3) → house = ((3-12+12) % 12) + 1 = 4 → trigger.
         assertEquals(4, s.fromLagna().marsHouse());
         assertTrue(s.fromLagna().present());
+    }
+
+    // ---- v1.2 Mars-strength cancellations ----
+
+    /**
+     * Mars in its own sign (Mesha/Aries) cancels Manglik entirely even when
+     * every reference point would otherwise trigger. Raw per-reference fields
+     * are preserved for transparency; overall status is NOT_MANGLIK; the
+     * cancellation code is populated.
+     */
+    @Test
+    void marsInOwnSignAriesCancelsManglik() {
+        // All three references in Mesha; Mars in Mesha → every reference
+        // would show house 1 (trigger). Cancellation overrides.
+        ManglikStatus s = engine.evaluate(
+                midOfRashi(1), 1, midOfRashi(1), midOfRashi(1));
+
+        assertEquals(ManglikState.NOT_MANGLIK, s.status(),
+                "Mars in own sign (Mesha) cancels Manglik");
+        assertEquals(List.of("MARS_IN_OWN_SIGN"), s.cancellations());
+        // Transparency: raw fields still show what would have triggered.
+        assertTrue(s.fromLagna().present(), "raw fromLagna.present preserved for the report");
+        assertTrue(s.fromMoon().present());
+        assertTrue(s.fromVenus().present());
+        assertEquals(1, s.fromLagna().marsHouse());
+    }
+
+    @Test
+    void marsInOwnSignScorpioCancelsManglik() {
+        // Lagna Mesha, Mars in Vrishchika → house 8 (would trigger). Cancelled.
+        ManglikStatus s = engine.evaluate(
+                midOfRashi(1), 1, midOfRashi(8), midOfRashi(1));
+        assertEquals(ManglikState.NOT_MANGLIK, s.status());
+        assertEquals(List.of("MARS_IN_OWN_SIGN"), s.cancellations());
+        assertEquals(8, s.fromLagna().marsHouse());
+        assertTrue(s.fromLagna().present());
+    }
+
+    @Test
+    void marsExaltedInCapricornCancelsManglik() {
+        // Lagna Mesha, Mars in Makara → house 10 (not itself a trigger); Moon
+        // in Karka → house 7 (trigger); Venus in Mithuna → house 8 (trigger).
+        // Without cancellation this would be full MANGLIK. Cancelled instead.
+        ManglikStatus s = engine.evaluate(
+                midOfRashi(1), 4, midOfRashi(10), midOfRashi(3));
+        assertEquals(ManglikState.NOT_MANGLIK, s.status());
+        assertEquals(List.of("MARS_EXALTED"), s.cancellations());
+        assertTrue(s.fromMoon().present(), "would have triggered from Moon before cancellation");
+        assertTrue(s.fromVenus().present(), "would have triggered from Venus before cancellation");
+    }
+
+    @Test
+    void marsDebilitatedInCancerCancelsManglik() {
+        // Mars in Karka (debilitated). Lagna Mesha → house 4 (would trigger). Cancelled.
+        ManglikStatus s = engine.evaluate(
+                midOfRashi(1), 1, midOfRashi(4), midOfRashi(1));
+        assertEquals(ManglikState.NOT_MANGLIK, s.status());
+        assertEquals(List.of("MARS_DEBILITATED"), s.cancellations());
+    }
+
+    @Test
+    void nonCancelMarsSignStillProducesManglik() {
+        // Sanity — the same "all references in Mesha" setup with Mars moved
+        // OFF a cancellation sign must still produce Manglik.
+        ManglikStatus s = engine.evaluate(
+                midOfRashi(1), 1, midOfRashi(2), midOfRashi(1));
+        assertEquals(ManglikState.MANGLIK, s.status(),
+                "Mars in Vrishabha (non-cancel) produces MANGLIK as before");
+        assertTrue(s.cancellations().isEmpty());
+    }
+
+    /**
+     * A cancelled personA + a clean personB is still not "safe" for the
+     * couple result — but the compatibility flows through both partners'
+     * status, and cancelled = NOT_MANGLIK, so this specific pair actually
+     * IS clean. Locks that in.
+     */
+    @Test
+    void cancelledPartnerBehavesAsNotManglikInCoupleCompatibility() {
+        ManglikStatus cancelledA = engine.evaluate(
+                midOfRashi(1), 1, midOfRashi(1), midOfRashi(1)); // Mars in own sign
+        ManglikStatus safeB = engine.evaluate(
+                midOfRashi(1), 1, midOfRashi(3), midOfRashi(1));
+        ManglikCompatibility c = engine.combine(cancelledA, safeB);
+        assertEquals(ManglikCompatibility.Compatibility.NEITHER_MANGLIK,
+                c.compatibility(),
+                "cancelled Manglik is a valid NEITHER_MANGLIK case for the couple result");
     }
 }

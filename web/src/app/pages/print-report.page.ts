@@ -215,6 +215,19 @@ interface Bundle {
                   </tr>
                 </tbody>
               </table>
+              @if (b.match.manglik.personA.cancellations.length > 0
+                  || b.match.manglik.personB.cancellations.length > 0) {
+                <ul class="cancel-list">
+                  @for (c of b.match.manglik.personA.cancellations; track c) {
+                    <li><strong>{{ b.boy?.label ?? 'A' }}:</strong>
+                        {{ i18n.t('manglik.cancellation.' + c) }}</li>
+                  }
+                  @for (c of b.match.manglik.personB.cancellations; track c) {
+                    <li><strong>{{ b.girl?.label ?? 'B' }}:</strong>
+                        {{ i18n.t('manglik.cancellation.' + c) }}</li>
+                  }
+                </ul>
+              }
               <p class="small muted">{{ i18n.t('manglik.note') }}</p>
             </section>
           }
@@ -347,6 +360,9 @@ interface Bundle {
     ul.dosha-list { list-style: none; padding: 0; margin: 0 0 6px; font-size: 13px; }
     ul.dosha-list li { padding: 3px 0; }
     .dosha-list__name { font-weight: 600; margin-right: 4px; }
+
+    ul.cancel-list { padding-left: 18px; margin: 4px 0 6px; font-size: 12.5px; color: #2a6b46; }
+    ul.cancel-list li { margin: 2px 0; }
 
     dl.meta {
       display: grid; grid-template-columns: max-content 1fr max-content 1fr;

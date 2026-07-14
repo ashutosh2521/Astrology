@@ -1,7 +1,7 @@
 {
   "verified": true,
-  "source": "Basic Manglik / Kuja / Mangal Dosha PRESENCE check per the classical Parashari convention: Mars placed in specific houses from a reference point flags the dosha. This v1.1 rule set is fixed by the app spec (docs/spec.md and the user's Milestone brief) as: three reference points (Lagna, Moon, Venus) and six trigger houses (1, 2, 4, 7, 8, 12). v1.1 adds PARTIAL_MANGLIK (Anshik) grading based on the number of triggered reference points, per the widely-used Indian marriage-matching convention.",
-  "ruleVersion": "manglik-v1.1",
+  "source": "Basic Manglik / Kuja / Mangal Dosha PRESENCE check per the classical Parashari convention: Mars placed in specific houses from a reference point flags the dosha, UNLESS Mars itself is strong enough that it cannot inflict the dosha. This v1.2 rule set is fixed by the app spec (docs/spec.md and the user's Milestone brief) as: three reference points (Lagna, Moon, Venus), six trigger houses (1, 2, 4, 7, 8, 12), Anshik / Full grading by triggered-reference count, PLUS Mars-strength cancellations (own sign / exalted / debilitated). The specific cell values are cited in Parashari, B. V. Raman's 'Muhurtha' and are the same convention Drik Panchang applies.",
+  "ruleVersion": "manglik-v1.2",
   "houseSystem": "WHOLE_SIGN",
   "houseSystemNote": "Whole-sign house math: house = ((grahaRashi - refRashi + 12) % 12) + 1. Uses only the sidereal longitudes stored on birth_charts (ascendantLongitude, marsLongitude, venusLongitude, moonRashiNumber). No Placidus cusp dependency, no additional ephemeris call at match time.",
 
@@ -9,7 +9,7 @@
   "referencePointsNote": "'LAGNA' is the Ascendant. 'MOON' is Chandra Lagna (Mars house counted from the Moon's sign). 'VENUS' is Shukra Lagna (Mars house counted from Venus's sign).",
 
   "triggerHouses": [1, 2, 4, 7, 8, 12],
-  "triggerHousesNote": "The classical Kuja Dosha houses. Some traditions treat house 2 or 8 differently (mild/severe); v1 treats all six identically. Advanced strength-based grading of individual houses is out of scope; PARTIAL_MANGLIK is currently based on reference-point count only.",
+  "triggerHousesNote": "The classical Kuja Dosha houses. Some traditions treat house 2 or 8 differently (mild/severe); v1 treats all six identically. Advanced strength-based grading of individual houses is out of scope.",
 
   "grading": {
     "rule": "COUNT_OF_TRIGGERED_REFERENCES",
@@ -17,11 +17,30 @@
     "partialManglikWhenTriggeredCount": [1],
     "manglikWhenTriggeredCount": [2, 3]
   },
-  "gradingNote": "'Anshik Manglik' (अंशिक मंगल दोष) — the most widely-used partial-Manglik convention in Indian marriage matching. Presence from exactly one of the three reference points is treated as partial; presence from two or three is full Manglik. This is a modern practical simplification of the classical principle that Mars affliction reduces in severity when it appears from fewer sources. Adopted from common Indian matrimonial practice (used by AstroSage and most matchmaking apps); not tied to a single classical text.",
+  "gradingNote": "'Anshik Manglik' (अंशिक मंगल दोष) — presence from exactly one of the three reference points is treated as partial; presence from two or three is full Manglik. Common Indian marriage-matching convention. This grading applies AFTER any cancellation below has been considered.",
 
-  "cancellationsImplemented": false,
-  "cancellationsNote": "Advanced Manglik cancellation rules (age-based, aspect-based, exalted-Mars, Mars-in-own-sign, benefic aspect on Mars, Manglik-Manglik nullification, dosha-bhanga yogas etc.) are TRADITION-VARIABLE and NOT implemented. The app must not automatically declare a Manglik-Manglik or Partial-Manglik match safe. Any Manglik presence (full or partial) requires expert review before a conclusion is drawn.",
+  "cancellationsImplemented": true,
+  "cancellations": {
+    "byMarsSign": [
+      {
+        "code": "MARS_IN_OWN_SIGN",
+        "signs": ["MESHA", "VRISHCHIKA"],
+        "note": "Mars in its own sign (Aries or Scorpio) — Mars is strong and does not inflict Manglik dosha. Classical rule cited in Parashari and B. V. Raman's 'Muhurtha'."
+      },
+      {
+        "code": "MARS_EXALTED",
+        "signs": ["MAKARA"],
+        "note": "Mars exalted in Capricorn — Mars is at maximum strength and does not inflict Manglik dosha."
+      },
+      {
+        "code": "MARS_DEBILITATED",
+        "signs": ["KARKA"],
+        "note": "Mars debilitated in Cancer — Mars loses the power to inflict Manglik dosha. Widely cited alongside the own-sign/exaltation cancellations."
+      }
+    ]
+  },
+  "cancellationsNote": "Mars-strength cancellations only. If Mars is in one of the four listed signs (Aries, Scorpio, Capricorn, Cancer), the person is NOT Manglik regardless of how many reference points would otherwise trigger. The raw per-reference marsHouse and 'present' fields are still reported for transparency; the overall status is NOT_MANGLIK and 'cancellations' carries the specific cancellation code. Advanced cancellations (age-based, aspect-based, benefic-aspect-on-Mars, Manglik-Manglik nullification, dosha-bhanga yogas) remain OUT OF SCOPE — the app must still not automatically declare a Manglik-Manglik or Anshik-Anshik match safe.",
 
-  "statusesEmittedInV1_1": ["NOT_MANGLIK", "PARTIAL_MANGLIK", "MANGLIK"],
-  "statusesNote": "v1.0 emitted only NOT_MANGLIK / MANGLIK. v1.1 adds PARTIAL_MANGLIK via the grading rule above. Historical results tagged 'manglik-v1.0' remain readable and keep their original two-state grading; the metadata on each stored MatchRecord preserves the rule version that produced it."
+  "statusesEmittedInV1_2": ["NOT_MANGLIK", "PARTIAL_MANGLIK", "MANGLIK"],
+  "statusesNote": "v1.0 emitted only NOT_MANGLIK / MANGLIK. v1.1 added PARTIAL_MANGLIK via the grading rule. v1.2 adds Mars-strength cancellations that can override any grade to NOT_MANGLIK (with the specific cancellation code populated on the status). Historical results retain their producing ruleVersion on the MatchRecord."
 }

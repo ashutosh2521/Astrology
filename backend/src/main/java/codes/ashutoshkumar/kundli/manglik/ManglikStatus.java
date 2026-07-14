@@ -32,17 +32,19 @@ public record ManglikStatus(
         String ruleVersion
 ) {
     public ManglikStatus {
-        // Defense in depth: the coarse NOT_MANGLIK / non-NOT_MANGLIK split must
-        // agree with whether any reference point fired. The finer PARTIAL vs
-        // MANGLIK split (v1.1: exactly-1 vs 2+ triggered) is the ENGINE's job
-        // to enforce — the record stays loose enough that historical results
-        // tagged manglik-v1.0 (only NOT_MANGLIK / MANGLIK, single-trigger =
-        // MANGLIK) still deserialize successfully from stored JSON.
+        // Defense in depth. Two clauses:
+        //  1. NOT_MANGLIK with a triggered reference is legal ONLY when a
+        //     cancellation fired (v1.2 Mars-strength cancellations override
+        //     the raw grading). Without a cancellation the two must agree.
+        //  2. Non-NOT_MANGLIK still requires at least one triggered reference,
+        //     always — a MANGLIK or PARTIAL_MANGLIK with zero triggers would
+        //     be an engine bug.
         boolean anyTriggered =
                 fromLagna.present() || fromMoon.present() || fromVenus.present();
-        if (status == ManglikState.NOT_MANGLIK && anyTriggered) {
+        boolean cancelled = cancellations != null && !cancellations.isEmpty();
+        if (status == ManglikState.NOT_MANGLIK && anyTriggered && !cancelled) {
             throw new IllegalStateException(
-                    "status=NOT_MANGLIK requires all reference points to have present=false");
+                    "status=NOT_MANGLIK with a triggered reference requires a cancellation");
         }
         if (status != ManglikState.NOT_MANGLIK && !anyTriggered) {
             throw new IllegalStateException(

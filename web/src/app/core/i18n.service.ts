@@ -96,7 +96,10 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'manglik.compat.NEITHER_MANGLIK': 'Neither partner is Manglik',
     'manglik.compat.REQUIRES_DETAILED_REVIEW': 'Detailed review required',
     'manglik.rules': 'Manglik rule set',
-    'manglik.note': 'Version 1 checks Mars in houses 1, 2, 4, 7, 8, 12 from Lagna, Moon and Venus. Advanced cancellation rules are NOT included — an astrologer should review any Manglik presence.',
+    'manglik.note': 'Mars in houses 1, 2, 4, 7, 8, 12 from Lagna, Moon or Venus flags Manglik. Mars in own sign (Aries/Scorpio), exalted (Capricorn) or debilitated (Cancer) cancels the dosha (classical Parashari rule). Other advanced cancellations are NOT included — an astrologer should review any remaining Manglik presence.',
+    'manglik.cancellation.MARS_IN_OWN_SIGN': 'Cancelled: Mars in own sign',
+    'manglik.cancellation.MARS_EXALTED': 'Cancelled: Mars exalted',
+    'manglik.cancellation.MARS_DEBILITATED': 'Cancelled: Mars debilitated',
 
     // ---- Mother-mode ----
     'mother.home.namaste': 'Namaste 🙏',
@@ -302,7 +305,10 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'manglik.compat.NEITHER_MANGLIK': 'दोनों में मंगल दोष नहीं है',
     'manglik.compat.REQUIRES_DETAILED_REVIEW': 'विस्तृत जांच आवश्यक',
     'manglik.rules': 'मंगल दोष नियम',
-    'manglik.note': 'यह प्रारंभिक जांच है — मंगल का 1, 2, 4, 7, 8, 12 भाव (लग्न, चंद्र और शुक्र से) देखा जाता है। दोष निरस्त (भंग) करने वाले जटिल नियम शामिल नहीं हैं; मंगल दोष होने पर किसी अनुभवी ज्योतिषी से विस्तृत जांच कराएँ।',
+    'manglik.note': 'लग्न, चंद्र या शुक्र से मंगल का 1, 2, 4, 7, 8, 12 भाव में होना मंगल दोष माना जाता है। मंगल स्वराशि (मेष/वृश्चिक), उच्च (मकर) या नीच (कर्क) में हो तो दोष स्वयं निरस्त हो जाता है (पराशरी नियम)। अन्य जटिल भंग नियम शामिल नहीं हैं — शेष मंगल दोष की स्थिति में किसी अनुभवी ज्योतिषी से विस्तृत जांच कराएँ।',
+    'manglik.cancellation.MARS_IN_OWN_SIGN': 'निरस्त: मंगल स्वराशि में',
+    'manglik.cancellation.MARS_EXALTED': 'निरस्त: मंगल उच्च का',
+    'manglik.cancellation.MARS_DEBILITATED': 'निरस्त: मंगल नीच का',
 
     // ---- मदर मोड ----
     'mother.home.namaste': 'नमस्ते माँ 🙏',

@@ -1,11 +1,14 @@
 package codes.ashutoshkumar.kundli.manglik;
 
+import codes.ashutoshkumar.kundli.ashtakoot.model.Rashi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,13 +42,17 @@ public final class ManglikEngine {
     private final Set<Integer> triggerHouses;
     private final Set<Integer> partialManglikCounts;
     private final Set<Integer> fullManglikCounts;
+    /** Mars-sign → cancellation code. Non-empty for Mesha, Vrishchika, Makara, Karka. */
+    private final Map<Integer, String> cancellationByMarsSign;
 
     ManglikEngine(String ruleVersion, Set<Integer> triggerHouses,
-                  Set<Integer> partialManglikCounts, Set<Integer> fullManglikCounts) {
+                  Set<Integer> partialManglikCounts, Set<Integer> fullManglikCounts,
+                  Map<Integer, String> cancellationByMarsSign) {
         this.ruleVersion = ruleVersion;
         this.triggerHouses = Set.copyOf(triggerHouses);
         this.partialManglikCounts = Set.copyOf(partialManglikCounts);
         this.fullManglikCounts = Set.copyOf(fullManglikCounts);
+        this.cancellationByMarsSign = Map.copyOf(cancellationByMarsSign);
     }
 
     /** Load rules from the classpath JSON and construct a ready engine. */
@@ -104,7 +111,34 @@ public final class ManglikEngine {
                         + " not assigned to any bucket");
             }
         }
-        return new ManglikEngine(ruleVersion, triggerHouses, partialCounts, fullCounts);
+
+        // Cancellations (Mars-strength). Optional block; if missing, no cancellations
+        // apply and the engine reverts to v1.1 behaviour.
+        Map<Integer, String> cancellationByMarsSign = new HashMap<>();
+        JsonNode cancellations = root.get("cancellations");
+        if (cancellations != null && cancellations.hasNonNull("byMarsSign")) {
+            for (JsonNode entry : cancellations.get("byMarsSign")) {
+                String code = requireText(entry, "code");
+                JsonNode signs = entry.get("signs");
+                if (signs == null || !signs.isArray() || signs.isEmpty()) {
+                    throw new IllegalStateException(
+                            "manglik_rules.json cancellations." + code + ".signs must be a non-empty array");
+                }
+                for (JsonNode s : signs) {
+                    // Resolve enum-name → Rashi ordinal (1..12). Fail-fast on unknown names.
+                    Rashi rashi = Rashi.valueOf(s.asText());
+                    String prior = cancellationByMarsSign.put(rashi.number(), code);
+                    if (prior != null && !prior.equals(code)) {
+                        throw new IllegalStateException(
+                                "manglik_rules.json cancellations: sign " + rashi
+                                + " assigned to both '" + prior + "' and '" + code + "'");
+                    }
+                }
+            }
+        }
+
+        return new ManglikEngine(ruleVersion, triggerHouses, partialCounts, fullCounts,
+                cancellationByMarsSign);
     }
 
     private static Set<Integer> intSet(JsonNode parent, String field) {
@@ -170,6 +204,11 @@ public final class ManglikEngine {
         return fullManglikCounts;
     }
 
+    /** For test introspection: Mars-sign → cancellation code map. */
+    Map<Integer, String> cancellationByMarsSign() {
+        return cancellationByMarsSign;
+    }
+
     /**
      * Evaluate one person.
      *
@@ -202,10 +241,19 @@ public final class ManglikEngine {
         if (fromMoon.present()) triggered.add(ReferencePoint.MOON);
         if (fromVenus.present()) triggered.add(ReferencePoint.VENUS);
 
-        ManglikState state = gradeByTriggeredCount(triggered.size());
+        // Mars-strength cancellations (v1.2): if Mars sits in own sign, exaltation
+        // or debilitation, no Manglik regardless of triggered references. The raw
+        // per-reference fields stay populated for transparency (the report can
+        // show "would have triggered from Lagna house 8, but cancelled").
+        String cancellationCode = cancellationByMarsSign.get(marsRashi);
+        List<String> cancellations = cancellationCode == null ? List.of() : List.of(cancellationCode);
+
+        ManglikState state = cancellationCode != null
+                ? ManglikState.NOT_MANGLIK
+                : gradeByTriggeredCount(triggered.size());
 
         return new ManglikStatus(
-                state, fromLagna, fromMoon, fromVenus, triggered, List.of(), ruleVersion);
+                state, fromLagna, fromMoon, fromVenus, triggered, cancellations, ruleVersion);
     }
 
     /**
