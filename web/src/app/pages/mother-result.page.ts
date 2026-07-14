@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { AshtakootResult, DoshaStatus, MatchResponse, RecommendationCategory } from '../core/models';
+import { AshtakootResult, DoshaStatus, ManglikStatus, MatchResponse, RecommendationCategory } from '../core/models';
 import { I18nService } from '../core/i18n.service';
 import { PlatformService } from '../core/platform.service';
 
@@ -55,6 +55,36 @@ import { PlatformService } from '../core/platform.service';
             <div class="pill__value">{{ manglikLabel() }}</div>
           </div>
         </div>
+
+        <!--
+          Per-person Manglik detail: only shown when the couple compatibility
+          is REQUIRES_DETAILED_REVIEW, so the user can see which partner is
+          Manglik (and from which reference point) rather than the opaque
+          "detailed review required" verdict alone. Cancelled cases show the
+          cancellation code (Mars own sign / exalted / debilitated).
+        -->
+        @if (m.manglik && m.manglik.compatibility === 'REQUIRES_DETAILED_REVIEW') {
+          <div class="manglik-detail card--inset">
+            <div class="manglik-detail__row">
+              <span class="manglik-detail__name">{{ m.boyLabel ?? 'A' }}</span>
+              <span class="manglik-detail__state"
+                    [class]="'manglik-detail__state--' + m.manglik.personA.status">
+                {{ manglikPersonSummary(m.manglik.personA) }}
+              </span>
+            </div>
+            <div class="manglik-detail__row">
+              <span class="manglik-detail__name">{{ m.girlLabel ?? 'B' }}</span>
+              <span class="manglik-detail__state"
+                    [class]="'manglik-detail__state--' + m.manglik.personB.status">
+                {{ manglikPersonSummary(m.manglik.personB) }}
+              </span>
+            </div>
+            <a [routerLink]="['/print', m.id]" target="_blank" rel="noopener"
+               class="manglik-detail__more small">
+              {{ i18n.t('motherResult.manglik.viewDetail') }} →
+            </a>
+          </div>
+        }
 
         <p class="disclaimer">{{ i18n.t('motherResult.disclaimer') }}</p>
 
@@ -154,6 +184,30 @@ import { PlatformService } from '../core/platform.service';
     .actions__row .btn { flex: 1; justify-content: center; }
     .actions .btn { justify-content: center; padding: 14px 18px; font-size: 15px; }
     .actions .btn--sm { padding: 10px 14px; font-size: 13.5px; }
+
+    .manglik-detail {
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+    }
+    .manglik-detail__row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border-soft);
+    }
+    .manglik-detail__row:last-of-type { border-bottom: none; }
+    .manglik-detail__name { font-weight: 600; font-size: 14px; color: var(--ink); }
+    .manglik-detail__state { font-size: 13px; color: var(--ink-2); text-align: right; }
+    .manglik-detail__state--NOT_MANGLIK     { color: var(--good); }
+    .manglik-detail__state--PARTIAL_MANGLIK { color: #d9b45e; }
+    .manglik-detail__state--MANGLIK         { color: var(--bad); }
+    .manglik-detail__more {
+      display: block;
+      margin-top: 8px;
+      text-align: right;
+      color: var(--ink-3);
+    }
   `],
 })
 export class MotherResultPage implements OnInit {
@@ -232,5 +286,32 @@ export class MotherResultPage implements OnInit {
     const m = this.match()?.manglik;
     if (!m) return '—';
     return this.i18n.t('motherResult.manglik.' + m.compatibility);
+  }
+
+  /**
+   * Compact per-person Manglik summary for the Mother-mode detail block.
+   * Formats depending on state:
+   *   - NOT_MANGLIK + cancellation → "Not Manglik (Cancelled: Mars in own sign)"
+   *   - NOT_MANGLIK plain           → "Not Manglik"
+   *   - PARTIAL_MANGLIK             → "Partial Manglik (from Moon)"
+   *   - MANGLIK                     → "Manglik (from Lagna, Moon)"
+   */
+  manglikPersonSummary(s: ManglikStatus): string {
+    const state = this.i18n.t('manglik.state.' + s.status);
+    if (s.status === 'NOT_MANGLIK') {
+      if (s.cancellations.length > 0) {
+        const codes = s.cancellations
+          .map(c => this.i18n.t('manglik.cancellation.' + c))
+          .join(', ');
+        return `${state} — ${codes}`;
+      }
+      return state;
+    }
+    // PARTIAL or full: name the reference points that fired.
+    const refs = s.triggeredReferences
+      .map(r => this.i18n.t('manglik.ref.' + r))
+      .join(this.i18n.lang() === 'hi' ? ', ' : ', ');
+    const fromWord = this.i18n.lang() === 'hi' ? ' — ' : ' — from ';
+    return `${state}${fromWord}${refs}`;
   }
 }
