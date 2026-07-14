@@ -102,4 +102,69 @@ class BirthChartServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> create("15/05/1990 2:53 PM", "Asia/Kolkata"));
     }
+
+    // -----------------------------------------------------------------
+    // Ashutosh Kumar canonical profile (docs/MILESTONE1_AUDIT.md §13.2).
+    //
+    // Birth: 25 Oct 1998, 04:20 PM IST, Ranchi, Jharkhand.
+    // In 24-hour form the birth time is 16:20:00; IST is UTC+5:30, so
+    // the UTC instant that reaches the ephemeris service must be exactly
+    // 1998-10-25T10:50:00Z. This app is built for this profile — a
+    // silent 04:20 AM / 04:20 PM confusion would produce a completely
+    // wrong Moon, Ascendant and match result.
+    // -----------------------------------------------------------------
+
+    private static final double RANCHI_LAT = 23.3441;
+    private static final double RANCHI_LON = 85.3096;
+
+    private BirthChart createAshutosh(String localDateTime) {
+        return service.create(new BirthChartService.CreateChartCommand(
+                "Ashutosh Kumar", localDateTime, "Asia/Kolkata",
+                RANCHI_LAT, RANCHI_LON, "Ranchi, Jharkhand, India"));
+    }
+
+    @Test
+    void ashutosh1620PmIstResolvesTo1050UtcSameDate() {
+        when(ephemeris.computeChart(eq(Instant.parse("1998-10-25T10:50:00Z")),
+                eq(RANCHI_LAT), eq(RANCHI_LON))).thenReturn(chart(15.0, 6.0));
+        BirthChart c = createAshutosh("1998-10-25T16:20:00");
+        // Strict eq() above means the mock threw if the service sent any
+        // other instant. Assert the stored UTC round-trips the same value.
+        assertEquals("1998-10-25T10:50:00Z", c.getUtcInstant());
+        assertEquals("1998-10-25T16:20:00", c.getBirthLocalDateTime());
+        assertEquals("Asia/Kolkata", c.getTimezone());
+    }
+
+    @Test
+    void ashutosh0420AmMustNotBeAliasedTo1620Pm() {
+        // Whichever branch of code reads local time, an accidental "PM
+        // means AM" (or vice versa) must never fold these two into the
+        // same UTC. This test locks that in.
+        when(ephemeris.computeChart(any(), anyDouble(), anyDouble()))
+                .thenReturn(chart(15.0, 6.0));
+
+        BirthChart pm = createAshutosh("1998-10-25T16:20:00");
+        BirthChart am = createAshutosh("1998-10-25T04:20:00");
+
+        // 12 hours apart in local time → 12 hours apart in UTC.
+        Instant pmUtc = Instant.parse(pm.getUtcInstant());
+        Instant amUtc = Instant.parse(am.getUtcInstant());
+        assertEquals(12 * 3600L, pmUtc.getEpochSecond() - amUtc.getEpochSecond(),
+                "04:20 must not be silently coerced into 16:20");
+
+        // Specifically: 04:20 IST is the PREVIOUS UTC day.
+        assertEquals("1998-10-24T22:50:00Z", am.getUtcInstant(),
+                "04:20 IST resolves to the previous UTC day, not the same day");
+    }
+
+    @Test
+    void ashutosh1620PmProducesNoHistoricalTimezoneWarning() {
+        // 1998 is well past the historicalTzWarningBeforeYear (1950); IST
+        // has been stable at UTC+5:30 since 1945. No warning expected.
+        when(ephemeris.computeChart(any(), anyDouble(), anyDouble()))
+                .thenReturn(chart(15.0, 6.0));
+        BirthChart c = createAshutosh("1998-10-25T16:20:00");
+        assertNull(c.getWarnings(),
+                "Ashutosh's 1998 birth is post-1950 and non-boundary; no warnings expected");
+    }
 }
