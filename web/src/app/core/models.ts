@@ -27,10 +27,43 @@ export interface CreateChartRequest {
   placeName: string | null;
 }
 
+/**
+ * One koota's structured outcome. Backend adds new fields (code,
+ * personAValue, personBValue, ruleApplied, doshaPresent) so a stored
+ * result can be re-rendered in either language from stable enum codes
+ * rather than by parsing the human-readable detail string.
+ *
+ * The legacy fields (koota, points, maxPoints, detail) are retained
+ * for backward compat with the existing Angular components; new UI
+ * work (Mother Mode) should key off {@link code} + {@link ruleApplied}.
+ */
 export interface KootaScore {
+  /**
+   * Programmatic identifier — one of VARNA, VASHYA, TARA, YONI,
+   * GRAHA_MAITRI, GANA, BHAKOOT, NADI. Stable across UI language and
+   * across engine refactors.
+   */
+  code: 'VARNA' | 'VASHYA' | 'TARA' | 'YONI' | 'GRAHA_MAITRI' | 'GANA' | 'BHAKOOT' | 'NADI';
+  /** Display name in English ("Varna", "Graha Maitri"). */
   koota: string;
+  /** Title-case Sanskrit value for person A — e.g. "Kshatriya", "Aadi", "Horse". */
+  personAValue: string;
+  /** Title-case Sanskrit value for person B — same shape as personAValue. */
+  personBValue: string;
   points: number;
   maxPoints: number;
+  /**
+   * True only for Nadi (same-Nadi) or Bhakoot (dosha pair). The overall
+   * result also carries a DoshaStatus for these two, with cancellation.
+   */
+  doshaPresent: boolean;
+  /**
+   * Rule branch that produced the score — e.g. SAME_MOON_SIGN_LORD,
+   * SWORN_ENEMY_YONI_PAIR, DOSHA_PAIR_5_9. Translation is a frontend
+   * responsibility; the code is stable.
+   */
+  ruleApplied: string;
+  /** Legacy free-text explanation. Used for the hover-reveal UI. */
   detail: string;
 }
 
