@@ -112,6 +112,125 @@
       "boy":  { "rashi": "DHANU", "nakshatra": "MULA", "pada": 1 },
       "girl": { "rashi": "MEENA", "nakshatra": "REVATI", "pada": 4 },
       "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+
+    {
+      "id": "tara-both-directions-auspicious",
+      "note": "boy Ashwini (1), girl Bharani (2): 2 fwd, 27 rev → mod9 (2, 0) — both good → 3.0",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "MESHA", "nakshatra": "BHARANI", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "tara-remainder-5-vipat-both",
+      "note": "boy Ashwini, girl Mrigashira: 5 fwd (Pratyak, bad), 23 rev → mod9 (5, 5) — both bad → 0.0",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "VRISHABHA", "nakshatra": "MRIGASHIRA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "tara-remainder-7-vadha-one",
+      "note": "boy Ashwini, girl Punarvasu: 7 fwd (Vadha, bad), 21 rev → mod9 (7, 3) — both bad → 0.0",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "MITHUNA", "nakshatra": "PUNARVASU", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+
+    {
+      "id": "bhakoot-7-7-opposite-signs-no-dosha",
+      "note": "Mesha/Tula = 7-7 — opposite signs, NOT a Bhakoot dosha; important non-dosha branch that must not regress",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "TULA", "nakshatra": "SWATI", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "bhakoot-3-11-no-dosha",
+      "note": "Mesha/Mithuna = 3-11 — trine, no Bhakoot dosha",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "MITHUNA", "nakshatra": "PUNARVASU", "pada": 3 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+
+    {
+      "id": "nadi-antya-vs-madhya-different",
+      "note": "Different Nadi cross: Krittika (Antya) vs Bharani (Madhya) — full 8, no dosha",
+      "boy":  { "rashi": "MESHA", "nakshatra": "KRITTIKA", "pada": 1 },
+      "girl": { "rashi": "MESHA", "nakshatra": "BHARANI", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "nadi-antya-antya-same-cross-rashi",
+      "note": "Antya-Antya across different Rashis (Rohini vs Krittika-4 both Antya) — Nadi dosha applies, NOT cancelled by sameRashiDifferentNakshatra flag since Rashis differ",
+      "boy":  { "rashi": "VRISHABHA", "nakshatra": "ROHINI", "pada": 1 },
+      "girl": { "rashi": "MESHA", "nakshatra": "KRITTIKA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+
+    {
+      "id": "yoni-same-animal-horse",
+      "note": "Same Yoni: Ashwini (Horse) vs Shatabhisha (Horse) — full 4",
+      "boy":  { "rashi": "MESHA", "nakshatra": "ASHWINI", "pada": 1 },
+      "girl": { "rashi": "KUMBHA", "nakshatra": "SHATABHISHA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "yoni-serpent-mongoose-sworn-enemy",
+      "note": "Sworn enemy pair Serpent (Rohini/Mrigashira) vs Mongoose (Uttara Ashadha) → 0",
+      "boy":  { "rashi": "VRISHABHA", "nakshatra": "ROHINI", "pada": 1 },
+      "girl": { "rashi": "MAKARA", "nakshatra": "UTTARA_ASHADHA", "pada": 3 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+
+    {
+      "id": "grahamaitri-same-lord-jupiter",
+      "note": "Both Moon signs share lord Jupiter (Dhanu + Meena) → full 5",
+      "boy":  { "rashi": "DHANU", "nakshatra": "MULA", "pada": 1 },
+      "girl": { "rashi": "MEENA", "nakshatra": "REVATI", "pada": 4 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "grahamaitri-mutual-friend-sun-moon",
+      "note": "Sun and Moon are mutual friends → band FRIEND_FRIEND; verify Drik Panchang's exact number",
+      "boy":  { "rashi": "SIMHA", "nakshatra": "MAGHA", "pada": 1 },
+      "girl": { "rashi": "KARKA", "nakshatra": "PUSHYA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+
+    {
+      "id": "gana-same-rakshasa",
+      "note": "Both Rakshasa Gana (Krittika vs Ashlesha) — matrix diagonal; verify against Drik Panchang whether same-Rakshasa scores full 6",
+      "boy":  { "rashi": "MESHA", "nakshatra": "KRITTIKA", "pada": 1 },
+      "girl": { "rashi": "KARKA", "nakshatra": "ASHLESHA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "gana-manushya-rakshasa-directional",
+      "note": "Directional case: boy Manushya (Bharani) + girl Rakshasa (Ashlesha) — some traditions score differently from the reverse; verify the direction Drik Panchang applies",
+      "boy":  { "rashi": "MESHA", "nakshatra": "BHARANI", "pada": 1 },
+      "girl": { "rashi": "KARKA", "nakshatra": "ASHLESHA", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "gana-rakshasa-manushya-reverse",
+      "note": "Reverse of gana-manushya-rakshasa-directional. Filling both cases from Drik Panchang tells us whether the matrix is symmetric or directional.",
+      "boy":  { "rashi": "KARKA", "nakshatra": "ASHLESHA", "pada": 1 },
+      "girl": { "rashi": "MESHA", "nakshatra": "BHARANI", "pada": 1 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+
+    {
+      "id": "varna-brahmin-brahmin-same-tier",
+      "note": "Both Brahmin tier (Karka vs Vrishchika) — boy tier >= girl tier by equality → Varna 1",
+      "boy":  { "rashi": "KARKA", "nakshatra": "PUSHYA", "pada": 1 },
+      "girl": { "rashi": "VRISHCHIKA", "nakshatra": "ANURADHA", "pada": 2 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
+    },
+    {
+      "id": "varna-vaishya-shudra-boy-higher",
+      "note": "Boy Vaishya, girl Shudra — boy tier higher → Varna 1",
+      "boy":  { "rashi": "VRISHABHA", "nakshatra": "KRITTIKA", "pada": 3 },
+      "girl": { "rashi": "MITHUNA", "nakshatra": "ARDRA", "pada": 2 },
+      "status": "PENDING_DRIK_PANCHANG", "expected": null
     }
   ]
 }
