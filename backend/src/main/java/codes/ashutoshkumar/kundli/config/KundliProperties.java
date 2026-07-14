@@ -15,9 +15,23 @@ public record KundliProperties(
         Ephemeris ephemeris,
         double boundaryWarningDegrees,
         int historicalTzWarningBeforeYear,
-        Rules rules
+        Rules rules,
+        Recommendation recommendation
 ) {
     public record Ephemeris(String baseUrl) {}
+
+    /**
+     * Thresholds that map an Ashtakoot total to a {@link
+     * codes.ashutoshkumar.kundli.ashtakoot.RecommendationCategory}.
+     * Spec §15: below {@code moderateMinimum} → WEAK, at least
+     * {@code moderateMinimum} but below {@code strongMinimum} → MODERATE,
+     * at least {@code strongMinimum} → STRONG.
+     *
+     * <p>Configurable specifically so a family or pandit can adjust
+     * thresholds without a code deploy — never scattered as magic
+     * numbers across the engine, the frontend and the verdict string.
+     */
+    public record Recommendation(double moderateMinimum, double strongMinimum) {}
 
     /**
      * Rule-system metadata surfaced on every match result. Kept as plain strings

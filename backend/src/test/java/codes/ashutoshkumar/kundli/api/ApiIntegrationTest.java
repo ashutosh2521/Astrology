@@ -91,6 +91,10 @@ class ApiIntegrationTest {
                 .andExpect(jsonPath("$.manglik.compatibility").exists())
                 .andExpect(jsonPath("$.manglik.ruleVersion").value("manglik-v1.1"))
                 .andExpect(jsonPath("$.ruleMetadata.ephemerisMode").value("SWISS_EPHEMERIS_FULL"))
+                // Preliminary-match category on every response (WEAK / MODERATE / STRONG).
+                // Both charts are Mesha/Ashwini here so the total is deterministic — the
+                // category just needs to be one of the three valid values, not a specific one.
+                .andExpect(jsonPath("$.recommendation").exists())
                 .andReturn();
 
         // The stored match reads back identically (SQLite round-trip of the result JSON).

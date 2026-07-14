@@ -2,12 +2,14 @@ package codes.ashutoshkumar.kundli.match;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootEngine;
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootResult;
+import codes.ashutoshkumar.kundli.ashtakoot.RecommendationCategory;
 import codes.ashutoshkumar.kundli.ashtakoot.model.MoonChart;
 import codes.ashutoshkumar.kundli.ashtakoot.model.Nakshatra;
 import codes.ashutoshkumar.kundli.ashtakoot.model.Rashi;
 import codes.ashutoshkumar.kundli.chart.BirthChart;
 import codes.ashutoshkumar.kundli.chart.BirthChartService;
 import codes.ashutoshkumar.kundli.chart.NotFoundException;
+import codes.ashutoshkumar.kundli.config.KundliProperties;
 import codes.ashutoshkumar.kundli.manglik.ManglikCompatibility;
 import codes.ashutoshkumar.kundli.manglik.ManglikEngine;
 import codes.ashutoshkumar.kundli.manglik.ManglikStatus;
@@ -37,26 +39,30 @@ public class MatchService {
     private final BirthChartService charts;
     private final AshtakootEngine engine;
     private final ManglikEngine manglikEngine;
+    private final KundliProperties props;
     private final ObjectMapper mapper;
 
     public MatchService(MatchRepository repository, BirthChartService charts,
                         AshtakootEngine engine, ManglikEngine manglikEngine,
-                        ObjectMapper mapper) {
+                        KundliProperties props, ObjectMapper mapper) {
         this.repository = repository;
         this.charts = charts;
         this.engine = engine;
         this.manglikEngine = manglikEngine;
+        this.props = props;
         this.mapper = mapper;
     }
 
     /**
-     * Both engine outputs from a single match run. {@link #manglik} is
-     * {@code null} only when one of the charts predates the M2 entity
-     * extension and lacks the longitudes Manglik needs; new charts
-     * always populate them, so this null case is a legacy read path.
+     * Both engine outputs from a single match run plus the recommendation
+     * category derived from the configured thresholds.
+     * {@link #manglik} is {@code null} only when one of the charts predates
+     * the M2 entity extension and lacks the longitudes Manglik needs; new
+     * charts always populate them, so this null case is a legacy read path.
      */
     public record MatchOutcome(MatchRecord record, AshtakootResult result,
                                ManglikCompatibility manglik,
+                               RecommendationCategory recommendation,
                                BirthChart boy, BirthChart girl) {}
 
     @Transactional
@@ -66,6 +72,7 @@ public class MatchService {
 
         AshtakootResult result = engine.match(toMoonChart(boy), toMoonChart(girl));
         ManglikCompatibility manglik = computeManglik(boy, girl);
+        RecommendationCategory recommendation = categorize(result.totalPoints());
 
         MatchRecord record = new MatchRecord(
                 boy.getId(), girl.getId(),
@@ -74,7 +81,14 @@ public class MatchService {
                 manglik == null ? null : toJson(manglik),
                 manglik == null ? null : manglik.ruleVersion(),
                 Instant.now().toString());
-        return new MatchOutcome(repository.save(record), result, manglik, boy, girl);
+        return new MatchOutcome(repository.save(record), result, manglik, recommendation, boy, girl);
+    }
+
+    /** Derive the WEAK / MODERATE / STRONG category from the injected thresholds. */
+    public RecommendationCategory categorize(double totalPoints) {
+        KundliProperties.Recommendation r = props.recommendation();
+        return RecommendationCategory.forTotal(
+                totalPoints, r.moderateMinimum(), r.strongMinimum());
     }
 
     /**

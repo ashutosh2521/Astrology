@@ -1,6 +1,7 @@
 package codes.ashutoshkumar.kundli.api;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootResult;
+import codes.ashutoshkumar.kundli.ashtakoot.RecommendationCategory;
 import codes.ashutoshkumar.kundli.config.KundliProperties;
 import codes.ashutoshkumar.kundli.manglik.ManglikCompatibility;
 import codes.ashutoshkumar.kundli.match.MatchRecord;
@@ -60,6 +61,12 @@ public class MatchController {
             String girlLabel,
             AshtakootResult result,
             ManglikCompatibility manglik,
+            /**
+             * Preliminary-match category from the configured thresholds:
+             * WEAK / MODERATE / STRONG. Derived from the total score; the
+             * Mother-mode UI renders it as the top-line Hindi banner.
+             */
+            RecommendationCategory recommendation,
             String rulesVersion,
             RuleMetadata ruleMetadata,
             String createdAt
@@ -105,7 +112,7 @@ public class MatchController {
         MatchRecord r = outcome.record();
         return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
                 outcome.boy().getLabel(), outcome.girl().getLabel(),
-                outcome.result(), outcome.manglik(),
+                outcome.result(), outcome.manglik(), outcome.recommendation(),
                 r.getRulesVersion(), currentMetadata(), r.getCreatedAt());
     }
 
@@ -115,6 +122,7 @@ public class MatchController {
         return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
                 null, null, parse(r.getResultJson()),
                 parseManglik(r.getManglikJson()),
+                service.categorize(r.getTotalPoints()),
                 r.getRulesVersion(), metadataFor(r), r.getCreatedAt());
     }
 
@@ -124,6 +132,7 @@ public class MatchController {
                 .map(r -> new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
                         null, null, parse(r.getResultJson()),
                         parseManglik(r.getManglikJson()),
+                        service.categorize(r.getTotalPoints()),
                         r.getRulesVersion(), metadataFor(r), r.getCreatedAt()))
                 .toList();
     }
