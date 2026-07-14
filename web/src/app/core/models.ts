@@ -135,6 +135,9 @@ export interface ManglikCompatibility {
   ruleVersion: string;
 }
 
+/** Preliminary-match category per brief §15. */
+export type RecommendationCategory = 'WEAK' | 'MODERATE' | 'STRONG';
+
 export interface MatchResponse {
   id: number;
   boyChartId: number;
@@ -144,10 +147,24 @@ export interface MatchResponse {
   result: AshtakootResult;
   /** Null only on legacy records that predate Ascendant/Mars/Venus storage. */
   manglik: ManglikCompatibility | null;
+  /** Category derived from total against configurable thresholds. */
+  recommendation: RecommendationCategory;
   /** Backward-compat: same value as ruleMetadata.ashtakootaRuleVersion. */
   rulesVersion: string;
   ruleMetadata: RuleMetadata;
   createdAt: string;
+}
+
+/**
+ * Mother-mode primary profile pointer. `configured: false` means the
+ * setup wizard hasn't been run yet — that is a first-class UI branch,
+ * not an error state.
+ */
+export interface ProfileResponse {
+  configured: boolean;
+  primaryChartId: number | null;
+  primaryChart: ChartResponse | null;
+  updatedAt: string | null;
 }
 
 export interface HealthResponse {

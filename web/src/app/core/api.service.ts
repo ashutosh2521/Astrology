@@ -6,6 +6,7 @@ import {
   CreateChartRequest,
   HealthResponse,
   MatchResponse,
+  ProfileResponse,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -30,5 +31,19 @@ export class ApiService {
 
   health(): Observable<HealthResponse> {
     return this.http.get<HealthResponse>('/api/health');
+  }
+
+  /** Mother-mode primary profile. `configured: false` on first run. */
+  getProfile(): Observable<ProfileResponse> {
+    return this.http.get<ProfileResponse>('/api/profile');
+  }
+
+  /** Point the primary profile at an existing chart id. */
+  setPrimaryChart(chartId: number): Observable<ProfileResponse> {
+    return this.http.put<ProfileResponse>('/api/profile', { chartId });
+  }
+
+  listMatches(): Observable<MatchResponse[]> {
+    return this.http.get<MatchResponse[]>('/api/matches');
   }
 }

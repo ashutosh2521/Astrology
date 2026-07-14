@@ -1,8 +1,8 @@
 import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
-import { ChartResponse } from '../core/models';
+import { ChartResponse, ProfileResponse } from '../core/models';
 import { City } from '../core/cities';
 import { I18nService } from '../core/i18n.service';
 import { PlacePickerComponent } from '../components/place-picker.component';
@@ -107,11 +107,18 @@ import { PlacePickerComponent } from '../components/place-picker.component';
             <article class="card chart fade-in">
               <header class="chart__head">
                 <h3 class="chart__name">{{ c.label }}</h3>
-                <button class="btn btn--danger-ghost" type="button"
-                        (click)="remove(c)"
-                        [attr.aria-label]="i18n.t('charts.deleteAria') + ' ' + c.label">
-                  {{ i18n.t('charts.delete') }}
-                </button>
+                <div class="chart__actions">
+                  <button class="btn btn--ghost btn--sm" type="button"
+                          [disabled]="isPrimary(c)"
+                          (click)="setAsPrimary(c)">
+                    {{ isPrimary(c) ? i18n.t('advanced.primary.already') : i18n.t('advanced.primary.set') }}
+                  </button>
+                  <button class="btn btn--danger-ghost" type="button"
+                          (click)="remove(c)"
+                          [attr.aria-label]="i18n.t('charts.deleteAria') + ' ' + c.label">
+                    {{ i18n.t('charts.delete') }}
+                  </button>
+                </div>
               </header>
 
               <div class="chart__badges">
@@ -187,11 +194,13 @@ import { PlacePickerComponent } from '../components/place-picker.component';
 })
 export class ChartsPage implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly router = inject(Router);
   readonly i18n = inject(I18nService);
 
   private readonly picker = viewChild(PlacePickerComponent);
 
   readonly charts = signal<ChartResponse[]>([]);
+  readonly profile = signal<ProfileResponse | null>(null);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -220,6 +229,25 @@ export class ChartsPage implements OnInit {
 
   ngOnInit(): void {
     this.refresh();
+    this.api.getProfile().subscribe({
+      next: p => this.profile.set(p),
+      error: () => {},
+    });
+  }
+
+  isPrimary(c: ChartResponse): boolean {
+    return this.profile()?.primaryChartId === c.id;
+  }
+
+  setAsPrimary(c: ChartResponse): void {
+    this.api.setPrimaryChart(c.id).subscribe({
+      next: p => {
+        this.profile.set(p);
+        // Bounce to Mother-mode home so the setup wizard is complete.
+        this.router.navigateByUrl('/');
+      },
+      error: () => this.error.set('charts.err.compute'),
+    });
   }
 
   onCity(c: City | null): void {

@@ -1,12 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { ApiService } from './core/api.service';
 import { I18nService } from './core/i18n.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink],
   template: `
     <div class="shell">
       <header class="topbar">
@@ -16,8 +16,6 @@ import { I18nService } from './core/i18n.service';
           <span class="brand__sub">{{ i18n.t('brand.sub') }}</span>
         </a>
         <nav class="nav">
-          <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">{{ i18n.t('nav.charts') }}</a>
-          <a routerLink="/match" routerLinkActive="is-active">{{ i18n.t('nav.match') }}</a>
           <div class="langs" role="group" aria-label="Language / भाषा">
             <button type="button" lang="hi"
                     [class.is-active]="i18n.lang() === 'hi'"
