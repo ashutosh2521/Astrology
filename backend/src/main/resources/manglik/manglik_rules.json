@@ -1,0 +1,20 @@
+{
+  "verified": true,
+  "source": "Basic Manglik / Kuja / Mangal Dosha PRESENCE check per the classical Parashari convention: Mars placed in specific houses from a reference point flags the dosha. This v1.0 rule set is fixed by the app spec (docs/spec.md and the user's Milestone brief) as: three reference points (Lagna, Moon, Venus) and six trigger houses (1, 2, 4, 7, 8, 12). This is the standard set BV Raman ('Muhurtha') and Drik Panchang use.",
+  "ruleVersion": "manglik-v1.0",
+  "houseSystem": "WHOLE_SIGN",
+  "houseSystemNote": "Whole-sign house math: house = ((grahaRashi - refRashi + 12) % 12) + 1. Uses only the sidereal longitudes stored on birth_charts (ascendantLongitude, marsLongitude, venusLongitude, moonRashiNumber). No Placidus cusp dependency, no additional ephemeris call at match time.",
+
+  "referencePoints": ["LAGNA", "MOON", "VENUS"],
+  "referencePointsNote": "'LAGNA' is the Ascendant. 'MOON' is Chandra Lagna (Mars house counted from the Moon's sign). 'VENUS' is Shukra Lagna (Mars house counted from Venus's sign).",
+
+  "triggerHouses": [1, 2, 4, 7, 8, 12],
+  "triggerHousesNote": "The classical Kuja Dosha houses. Some traditions treat house 2 or 8 differently (mild/severe); v1 treats all six identically. Advanced strength-based grading is a v1.1 concern.",
+
+  "cancellationsImplemented": false,
+  "cancellationsNote": "Advanced Manglik cancellation rules (age-based, aspect-based, exalted-Mars, Mars-in-own-sign, benefic aspect on Mars, Manglik-Manglik nullification, dosha-bhanga yogas etc.) are TRADITION-VARIABLE and NOT implemented in v1. The app must not automatically declare a Manglik-Manglik match safe. Any Manglik presence requires expert review before a conclusion is drawn.",
+
+  "statusesEmittedInV1": ["NOT_MANGLIK", "MANGLIK"],
+  "statusesReservedForV1_1": ["PARTIAL_MANGLIK"],
+  "statusesNote": "PARTIAL_MANGLIK is reserved in the enum for a future v1.1 that grades Manglik strength (e.g. presence in only 1 of 3 reference points, or in mild-strength houses). V1 emits only NOT_MANGLIK / MANGLIK to avoid inventing an ungrounded strength scale."
+}
