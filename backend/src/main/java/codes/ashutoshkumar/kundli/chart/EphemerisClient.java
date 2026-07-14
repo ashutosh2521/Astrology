@@ -33,13 +33,26 @@ public class EphemerisClient {
         this.mapper = mapper;
     }
 
-    /** Moon placement extracted from a chart response, plus the raw JSON for storage. */
+    /**
+     * Moon placement + Ascendant/Mars/Venus longitudes extracted from a chart
+     * response, plus the raw JSON for storage.
+     *
+     * <p>Ascendant/Mars/Venus are picked out even though nothing consumes them
+     * today, because Milestone 4 (Manglik) needs Mars-in-house-from-Lagna,
+     * Mars-in-house-from-Moon, and Mars-in-house-from-Venus. Extracting them
+     * once at chart creation means Manglik never triggers a recompute — and
+     * the entity's schema, not just the chartJson blob, has explicit columns
+     * for them so queries stay tractable.
+     */
     public record ComputedChart(
             int moonRashiNumber,
             int moonNakshatraNumber,
             int moonPada,
             double moonDegreesToRashiBoundary,
             double moonDegreesToNakshatraBoundary,
+            double ascendantLongitude,
+            double marsLongitude,
+            double venusLongitude,
             String precision,
             String ayanamsa,
             String rawJson
@@ -84,12 +97,18 @@ public class EphemerisClient {
                         "Ephemeris returned non-full precision '" + precision + "'; refusing chart");
             }
             JsonNode moon = root.path("moon");
+            double ascendantLongitude = root.path("ascendant").path("longitude").asDouble();
+            double marsLongitude = grahaLongitude(root, "Mars");
+            double venusLongitude = grahaLongitude(root, "Venus");
             return new ComputedChart(
                     moon.path("rashi").path("number").asInt(),
                     moon.path("nakshatra").path("number").asInt(),
                     moon.path("pada").asInt(),
                     moon.path("rashi").path("degrees_to_boundary").asDouble(),
                     moon.path("nakshatra").path("degrees_to_boundary").asDouble(),
+                    ascendantLongitude,
+                    marsLongitude,
+                    venusLongitude,
                     precision,
                     root.path("ayanamsa").asText(),
                     raw);
@@ -99,5 +118,23 @@ public class EphemerisClient {
             throw new EphemerisUnavailableException(
                     "Could not parse ephemeris response: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Extract the sidereal longitude of a named graha from the response. The
+     * ephemeris service returns grahas as an array of objects keyed by "name"
+     * (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu — see
+     * ephemeris-service/app/ephemeris.py). Throws if the named graha isn't
+     * present, which would indicate an out-of-contract response, not a valid
+     * chart worth storing.
+     */
+    private static double grahaLongitude(JsonNode root, String name) {
+        for (JsonNode g : root.path("grahas")) {
+            if (name.equals(g.path("name").asText())) {
+                return g.path("longitude").asDouble();
+            }
+        }
+        throw new EphemerisUnavailableException(
+                "Ephemeris response missing required graha: " + name);
     }
 }

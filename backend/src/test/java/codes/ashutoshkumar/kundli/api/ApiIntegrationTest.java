@@ -43,6 +43,7 @@ class ApiIntegrationTest {
 
     private static ComputedChart moon(int rashi, int nakshatra, int pada) {
         return new ComputedChart(rashi, nakshatra, pada, 15.0, 6.0,
+                123.4, 45.6, 78.9,
                 "SWISS_EPHEMERIS_FULL", "LAHIRI", "{\"stub\":true}");
     }
 

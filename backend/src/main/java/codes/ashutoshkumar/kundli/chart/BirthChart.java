@@ -67,6 +67,20 @@ public class BirthChart {
 
     private double moonDegreesToNakshatraBoundary;
 
+    /**
+     * Sidereal Ascendant (Lagna) longitude, degrees [0, 360). Populated at chart
+     * creation so Milestone 4's Manglik engine (Mars-in-house-N from Lagna) can
+     * read stored charts without recomputing. Nullable so older rows keep loading;
+     * new charts always populate it.
+     */
+    private Double ascendantLongitude;
+
+    /** Sidereal Mars longitude, degrees [0, 360). Same rationale as ascendantLongitude. */
+    private Double marsLongitude;
+
+    /** Sidereal Venus longitude, degrees [0, 360). Same rationale as ascendantLongitude. */
+    private Double venusLongitude;
+
     /** Newline-joined accuracy warnings (boundary proximity, historical timezone). */
     private String warnings;
 
@@ -94,8 +108,10 @@ public class BirthChart {
                       double latitude, double longitude, String placeName,
                       String utcInstant, int moonRashiNumber, int moonNakshatraNumber,
                       int moonPada, double moonDegreesToRashiBoundary,
-                      double moonDegreesToNakshatraBoundary, String warnings,
-                      String ayanamsa, String precision, String chartJson, String createdAt) {
+                      double moonDegreesToNakshatraBoundary,
+                      Double ascendantLongitude, Double marsLongitude, Double venusLongitude,
+                      String warnings, String ayanamsa, String precision,
+                      String chartJson, String createdAt) {
         this.label = label;
         this.birthLocalDateTime = birthLocalDateTime;
         this.timezone = timezone;
@@ -108,6 +124,9 @@ public class BirthChart {
         this.moonPada = moonPada;
         this.moonDegreesToRashiBoundary = moonDegreesToRashiBoundary;
         this.moonDegreesToNakshatraBoundary = moonDegreesToNakshatraBoundary;
+        this.ascendantLongitude = ascendantLongitude;
+        this.marsLongitude = marsLongitude;
+        this.venusLongitude = venusLongitude;
         this.warnings = warnings;
         this.ayanamsa = ayanamsa;
         this.precision = precision;
@@ -128,6 +147,9 @@ public class BirthChart {
     public int getMoonPada() { return moonPada; }
     public double getMoonDegreesToRashiBoundary() { return moonDegreesToRashiBoundary; }
     public double getMoonDegreesToNakshatraBoundary() { return moonDegreesToNakshatraBoundary; }
+    public Double getAscendantLongitude() { return ascendantLongitude; }
+    public Double getMarsLongitude() { return marsLongitude; }
+    public Double getVenusLongitude() { return venusLongitude; }
     public String getWarnings() { return warnings; }
     public String getAyanamsa() { return ayanamsa; }
     public String getPrecision() { return precision; }

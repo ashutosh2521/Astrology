@@ -33,7 +33,10 @@ class BirthChartServiceTest {
                     "ashtakoot-v0-provisional", "not-implemented", "SWISS_EPHEMERIS_FULL"));
 
     private static ComputedChart chart(double toRashiBoundary, double toNakshatraBoundary) {
+        // Placeholder longitudes for Ascendant/Mars/Venus — the service under
+        // test doesn't consume them; Milestone 4 (Manglik) will.
         return new ComputedChart(1, 1, 1, toRashiBoundary, toNakshatraBoundary,
+                123.4, 45.6, 78.9,
                 "SWISS_EPHEMERIS_FULL", "LAHIRI", "{}");
     }
 
