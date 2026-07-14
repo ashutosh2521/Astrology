@@ -77,6 +77,13 @@ class ApiIntegrationTest {
                 .andExpect(jsonPath("$.result.doshas[0].present").value(true))
                 .andExpect(jsonPath("$.result.doshas[0].cancelled").value(true))
                 .andExpect(jsonPath("$.rulesVersion").value(containsString("provisional")))
+                // Declared rule system block (spec: every result exposes metadata).
+                .andExpect(jsonPath("$.ruleMetadata.ayanamsa").value("LAHIRI"))
+                .andExpect(jsonPath("$.ruleMetadata.matchingSystem").value("NORTH_INDIAN_ASHTAKOOTA"))
+                .andExpect(jsonPath("$.ruleMetadata.ashtakootaRuleVersion")
+                        .value(containsString("provisional")))
+                .andExpect(jsonPath("$.ruleMetadata.manglikRuleVersion").value("not-implemented"))
+                .andExpect(jsonPath("$.ruleMetadata.ephemerisMode").value("SWISS_EPHEMERIS_FULL"))
                 .andReturn();
 
         // The stored match reads back identically (SQLite round-trip of the result JSON).
@@ -85,7 +92,13 @@ class ApiIntegrationTest {
         mvc.perform(get("/api/matches/" + matchId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.kootas", hasSize(8)))
-                .andExpect(jsonPath("$.result.doshas[0].cancelled").value(true));
+                .andExpect(jsonPath("$.result.doshas[0].cancelled").value(true))
+                // The rule-metadata block also appears on GET, and its
+                // ashtakootaRuleVersion is the frozen historical value from the
+                // stored MatchRecord — a later config bump must not silently
+                // relabel historical results.
+                .andExpect(jsonPath("$.ruleMetadata.ashtakootaRuleVersion")
+                        .value(containsString("provisional")));
     }
 
     @Test

@@ -28,7 +28,9 @@ class BirthChartServiceTest {
     private BirthChartService service;
 
     private static final KundliProperties PROPS = new KundliProperties(
-            new KundliProperties.Ephemeris("http://127.0.0.1:8001"), 1.0, 1950);
+            new KundliProperties.Ephemeris("http://127.0.0.1:8001"), 1.0, 1950,
+            new KundliProperties.Rules("LAHIRI", "NORTH_INDIAN_ASHTAKOOTA",
+                    "ashtakoot-v0-provisional", "not-implemented", "SWISS_EPHEMERIS_FULL"));
 
     private static ComputedChart chart(double toRashiBoundary, double toNakshatraBoundary) {
         return new ComputedChart(1, 1, 1, toRashiBoundary, toNakshatraBoundary,

@@ -50,6 +50,19 @@ export interface AshtakootResult {
   verdict: string;
 }
 
+/**
+ * Declared rule system a result was produced under. Every match response
+ * carries this so a stored verdict is independently attributable to the
+ * exact convention that produced it.
+ */
+export interface RuleMetadata {
+  ayanamsa: string;                 // e.g. "LAHIRI"
+  matchingSystem: string;           // e.g. "NORTH_INDIAN_ASHTAKOOTA"
+  ashtakootaRuleVersion: string;    // e.g. "ashtakoot-v0-provisional"
+  manglikRuleVersion: string;       // e.g. "not-implemented" until Milestone 4 lands
+  ephemerisMode: string;            // e.g. "SWISS_EPHEMERIS_FULL"
+}
+
 export interface MatchResponse {
   id: number;
   boyChartId: number;
@@ -57,7 +70,9 @@ export interface MatchResponse {
   boyLabel: string | null;
   girlLabel: string | null;
   result: AshtakootResult;
+  /** Backward-compat: same value as ruleMetadata.ashtakootaRuleVersion. */
   rulesVersion: string;
+  ruleMetadata: RuleMetadata;
   createdAt: string;
 }
 
