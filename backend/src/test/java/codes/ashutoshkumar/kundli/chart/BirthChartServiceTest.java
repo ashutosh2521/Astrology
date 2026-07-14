@@ -30,7 +30,7 @@ class BirthChartServiceTest {
     private static final KundliProperties PROPS = new KundliProperties(
             new KundliProperties.Ephemeris("http://127.0.0.1:8001"), 1.0, 1950,
             new KundliProperties.Rules("LAHIRI", "NORTH_INDIAN_ASHTAKOOTA",
-                    "ashtakoot-v0-provisional", "not-implemented", "SWISS_EPHEMERIS_FULL"));
+                    "ashtakoot-v0-provisional", "manglik-v1.0", "SWISS_EPHEMERIS_FULL"));
 
     private static ComputedChart chart(double toRashiBoundary, double toNakshatraBoundary) {
         // Placeholder longitudes for Ascendant/Mars/Venus — the service under

@@ -46,6 +46,22 @@ public class MatchRecord {
     @Column(nullable = false)
     private String rulesVersion;
 
+    /**
+     * Full ManglikCompatibility (both partners' per-reference results,
+     * couple compatibility, ruleVersion), serialized. Nullable so any
+     * pre-M4 records still load — new writes always populate it.
+     */
+    @Lob
+    private String manglikJson;
+
+    /**
+     * The Manglik rule-version that produced {@link #manglikJson}. Same
+     * "frozen historical version" pattern the ashtakoot rulesVersion uses,
+     * so a future manglik-v1.1 bump cannot silently relabel historical
+     * results.
+     */
+    private String manglikRulesVersion;
+
     @Column(nullable = false)
     private String createdAt;
 
@@ -54,7 +70,9 @@ public class MatchRecord {
     }
 
     public MatchRecord(Long boyChartId, Long girlChartId, double totalPoints, double maxPoints,
-                       String verdict, String resultJson, String rulesVersion, String createdAt) {
+                       String verdict, String resultJson, String rulesVersion,
+                       String manglikJson, String manglikRulesVersion,
+                       String createdAt) {
         this.boyChartId = boyChartId;
         this.girlChartId = girlChartId;
         this.totalPoints = totalPoints;
@@ -62,6 +80,8 @@ public class MatchRecord {
         this.verdict = verdict;
         this.resultJson = resultJson;
         this.rulesVersion = rulesVersion;
+        this.manglikJson = manglikJson;
+        this.manglikRulesVersion = manglikRulesVersion;
         this.createdAt = createdAt;
     }
 
@@ -73,5 +93,7 @@ public class MatchRecord {
     public String getVerdict() { return verdict; }
     public String getResultJson() { return resultJson; }
     public String getRulesVersion() { return rulesVersion; }
+    public String getManglikJson() { return manglikJson; }
+    public String getManglikRulesVersion() { return manglikRulesVersion; }
     public String getCreatedAt() { return createdAt; }
 }

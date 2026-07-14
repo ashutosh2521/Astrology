@@ -2,6 +2,7 @@ package codes.ashutoshkumar.kundli.api;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootResult;
 import codes.ashutoshkumar.kundli.config.KundliProperties;
+import codes.ashutoshkumar.kundli.manglik.ManglikCompatibility;
 import codes.ashutoshkumar.kundli.match.MatchRecord;
 import codes.ashutoshkumar.kundli.match.MatchService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -42,10 +43,14 @@ public class MatchController {
     }
 
     /**
-     * A stored match, with the full engine result re-inflated from its JSON.
+     * A stored match, with the full engine results re-inflated from JSON.
      * {@link #rulesVersion} is kept for backward compatibility with existing
      * clients; {@link #ruleMetadata} is the structured block the spec asks
      * every result to expose.
+     *
+     * <p>{@link #manglik} is {@code null} only for legacy records created
+     * before M4 (or from BirthCharts that predate M2's Ascendant/Mars/Venus
+     * columns). Every new match populates it.
      */
     public record MatchResponse(
             long id,
@@ -54,6 +59,7 @@ public class MatchController {
             String boyLabel,
             String girlLabel,
             AshtakootResult result,
+            ManglikCompatibility manglik,
             String rulesVersion,
             RuleMetadata ruleMetadata,
             String createdAt
@@ -76,17 +82,20 @@ public class MatchController {
 
     /**
      * Metadata for a stored result. The historical {@code ashtakootaRuleVersion}
-     * comes from the frozen {@link MatchRecord#getRulesVersion()} so a historical
-     * match keeps its ash-koot version even after a config bump. Other fields
-     * (ayanamsa, ephemeris mode) are not yet stored per-record; until Milestone 3
-     * ships {@code ashtakoota-v1.0} and freezes the full block on the entity, we
-     * report the current values for those. Fine while the whole block is one set.
+     * and {@code manglikRuleVersion} come from the frozen values on {@link MatchRecord}
+     * so a historical match keeps its exact versions even after a config bump.
+     * Other fields (ayanamsa, ephemeris mode) are not yet stored per-record;
+     * until we freeze the full block on the entity, current values are reported
+     * for those — fine while the whole block is one set.
      */
     private RuleMetadata metadataFor(MatchRecord r) {
         KundliProperties.Rules current = props.rules();
+        String manglikVersion = r.getManglikRulesVersion() == null
+                ? current.manglikRuleVersion()
+                : r.getManglikRulesVersion();
         return new RuleMetadata(
                 current.ayanamsa(), current.matchingSystem(),
-                r.getRulesVersion(), current.manglikRuleVersion(), current.ephemerisMode());
+                r.getRulesVersion(), manglikVersion, current.ephemerisMode());
     }
 
     @PostMapping
@@ -96,23 +105,26 @@ public class MatchController {
         MatchRecord r = outcome.record();
         return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
                 outcome.boy().getLabel(), outcome.girl().getLabel(),
-                outcome.result(), r.getRulesVersion(), currentMetadata(), r.getCreatedAt());
+                outcome.result(), outcome.manglik(),
+                r.getRulesVersion(), currentMetadata(), r.getCreatedAt());
     }
 
     @GetMapping("/{id}")
     public MatchResponse get(@PathVariable long id) {
         MatchRecord r = service.get(id);
         return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
-                null, null, parse(r.getResultJson()), r.getRulesVersion(),
-                metadataFor(r), r.getCreatedAt());
+                null, null, parse(r.getResultJson()),
+                parseManglik(r.getManglikJson()),
+                r.getRulesVersion(), metadataFor(r), r.getCreatedAt());
     }
 
     @GetMapping
     public List<MatchResponse> list() {
         return service.list().stream()
                 .map(r -> new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
-                        null, null, parse(r.getResultJson()), r.getRulesVersion(),
-                        metadataFor(r), r.getCreatedAt()))
+                        null, null, parse(r.getResultJson()),
+                        parseManglik(r.getManglikJson()),
+                        r.getRulesVersion(), metadataFor(r), r.getCreatedAt()))
                 .toList();
     }
 
@@ -121,6 +133,18 @@ public class MatchController {
             return mapper.readValue(json, AshtakootResult.class);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Stored match result is unreadable", e);
+        }
+    }
+
+    /** Nullable — returns null when the stored record had no Manglik JSON (legacy). */
+    private ManglikCompatibility parseManglik(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return mapper.readValue(json, ManglikCompatibility.class);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Stored Manglik result is unreadable", e);
         }
     }
 }

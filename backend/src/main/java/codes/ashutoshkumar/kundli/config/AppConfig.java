@@ -1,6 +1,7 @@
 package codes.ashutoshkumar.kundli.config;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootEngine;
+import codes.ashutoshkumar.kundli.manglik.ManglikEngine;
 import java.time.Duration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,16 @@ public class AppConfig {
     @Bean
     public AshtakootEngine ashtakootEngine() {
         return AshtakootEngine.create();
+    }
+
+    /**
+     * Manglik engine — loads and validates {@code /manglik/manglik_rules.json}
+     * at construction, same "fail fast at boot" stance the Ashtakoot engine
+     * uses for its reference tables. See {@link ManglikEngine#create()}.
+     */
+    @Bean
+    public ManglikEngine manglikEngine() {
+        return ManglikEngine.create();
     }
 
     /**

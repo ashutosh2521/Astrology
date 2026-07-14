@@ -8,6 +8,9 @@ import codes.ashutoshkumar.kundli.ashtakoot.model.Rashi;
 import codes.ashutoshkumar.kundli.chart.BirthChart;
 import codes.ashutoshkumar.kundli.chart.BirthChartService;
 import codes.ashutoshkumar.kundli.chart.NotFoundException;
+import codes.ashutoshkumar.kundli.manglik.ManglikCompatibility;
+import codes.ashutoshkumar.kundli.manglik.ManglikEngine;
+import codes.ashutoshkumar.kundli.manglik.ManglikStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -33,17 +36,27 @@ public class MatchService {
     private final MatchRepository repository;
     private final BirthChartService charts;
     private final AshtakootEngine engine;
+    private final ManglikEngine manglikEngine;
     private final ObjectMapper mapper;
 
     public MatchService(MatchRepository repository, BirthChartService charts,
-                        AshtakootEngine engine, ObjectMapper mapper) {
+                        AshtakootEngine engine, ManglikEngine manglikEngine,
+                        ObjectMapper mapper) {
         this.repository = repository;
         this.charts = charts;
         this.engine = engine;
+        this.manglikEngine = manglikEngine;
         this.mapper = mapper;
     }
 
+    /**
+     * Both engine outputs from a single match run. {@link #manglik} is
+     * {@code null} only when one of the charts predates the M2 entity
+     * extension and lacks the longitudes Manglik needs; new charts
+     * always populate them, so this null case is a legacy read path.
+     */
     public record MatchOutcome(MatchRecord record, AshtakootResult result,
+                               ManglikCompatibility manglik,
                                BirthChart boy, BirthChart girl) {}
 
     @Transactional
@@ -52,12 +65,41 @@ public class MatchService {
         BirthChart girl = charts.get(girlChartId);
 
         AshtakootResult result = engine.match(toMoonChart(boy), toMoonChart(girl));
+        ManglikCompatibility manglik = computeManglik(boy, girl);
 
         MatchRecord record = new MatchRecord(
                 boy.getId(), girl.getId(),
                 result.totalPoints(), result.maxPoints(), result.verdict(),
-                toJson(result), RULES_VERSION, Instant.now().toString());
-        return new MatchOutcome(repository.save(record), result, boy, girl);
+                toJson(result), RULES_VERSION,
+                manglik == null ? null : toJson(manglik),
+                manglik == null ? null : manglik.ruleVersion(),
+                Instant.now().toString());
+        return new MatchOutcome(repository.save(record), result, manglik, boy, girl);
+    }
+
+    /**
+     * Compute Manglik if both charts carry the longitudes Manglik needs.
+     * Returns null when either chart is missing them (legacy pre-M2 rows) —
+     * the DTO layer then omits {@code manglik} from the response rather
+     * than fabricating a placeholder or a partial result.
+     */
+    private ManglikCompatibility computeManglik(BirthChart boy, BirthChart girl) {
+        if (!hasManglikInputs(boy) || !hasManglikInputs(girl)) {
+            return null;
+        }
+        ManglikStatus boyManglik = manglikEngine.evaluate(
+                boy.getAscendantLongitude(), boy.getMoonRashiNumber(),
+                boy.getMarsLongitude(), boy.getVenusLongitude());
+        ManglikStatus girlManglik = manglikEngine.evaluate(
+                girl.getAscendantLongitude(), girl.getMoonRashiNumber(),
+                girl.getMarsLongitude(), girl.getVenusLongitude());
+        return manglikEngine.combine(boyManglik, girlManglik);
+    }
+
+    private static boolean hasManglikInputs(BirthChart c) {
+        return c.getAscendantLongitude() != null
+                && c.getMarsLongitude() != null
+                && c.getVenusLongitude() != null;
     }
 
     @Transactional(readOnly = true)
@@ -78,11 +120,11 @@ public class MatchService {
                 c.getMoonPada());
     }
 
-    private String toJson(AshtakootResult result) {
+    private String toJson(Object value) {
         try {
-            return mapper.writeValueAsString(result);
+            return mapper.writeValueAsString(value);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to serialize match result", e);
+            throw new IllegalStateException("Failed to serialize match payload", e);
         }
     }
 }
