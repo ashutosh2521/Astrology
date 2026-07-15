@@ -52,6 +52,22 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'charts.moonSign': 'Moon sign',
     'charts.moonNak': 'Moon nakshatra & pada',
     'charts.pada': 'Pada',
+    'charts.attr.title': 'Kundli details',
+    'charts.attr.gana': 'Gana',
+    'charts.attr.nadi': 'Nadi',
+    'charts.attr.yoni': 'Yoni',
+    'charts.attr.varna': 'Varna',
+    'charts.attr.vashya': 'Vashya',
+    'charts.attr.moonLord': 'Rashi lord',
+    'charts.house7.title': '7th house (marriage)',
+    'charts.house7.sign': 'Sign',
+    'charts.house7.lord': 'Lord',
+    'charts.house7.occupants': 'Planets in 7th',
+    'charts.house7.empty': 'No planets — clear',
+    'charts.house7.FAVOURABLE': 'Favourable',
+    'charts.house7.MIXED': 'Mixed',
+    'charts.house7.NEEDS_ATTENTION': 'Needs attention',
+    'charts.house7.note': 'A first-pass indicator from the planets sitting in the 7th house counted from the Lagna. It does not weigh aspects, the 7th lord\'s strength or dashas — an astrologer should review before any conclusion.',
     'charts.delete': 'Delete',
     'charts.deleteAria': 'Delete chart for',
     'charts.deleteConfirm': 'Delete the chart for “{name}”?',
@@ -274,6 +290,22 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'charts.moonSign': 'चंद्र राशि',
     'charts.moonNak': 'चंद्र नक्षत्र और चरण',
     'charts.pada': 'चरण',
+    'charts.attr.title': 'कुंडली विवरण',
+    'charts.attr.gana': 'गण',
+    'charts.attr.nadi': 'नाड़ी',
+    'charts.attr.yoni': 'योनि',
+    'charts.attr.varna': 'वर्ण',
+    'charts.attr.vashya': 'वश्य',
+    'charts.attr.moonLord': 'राशि स्वामी',
+    'charts.house7.title': 'सप्तम भाव (विवाह)',
+    'charts.house7.sign': 'राशि',
+    'charts.house7.lord': 'स्वामी',
+    'charts.house7.occupants': 'सप्तम में ग्रह',
+    'charts.house7.empty': 'कोई ग्रह नहीं — निर्मल',
+    'charts.house7.FAVOURABLE': 'अनुकूल',
+    'charts.house7.MIXED': 'मिश्रित',
+    'charts.house7.NEEDS_ATTENTION': 'ध्यान देने योग्य',
+    'charts.house7.note': 'यह लग्न से गिने गए सप्तम भाव में बैठे ग्रहों पर आधारित प्रारंभिक संकेत मात्र है। इसमें दृष्टि, सप्तमेश का बल या दशा शामिल नहीं है — किसी निष्कर्ष से पहले ज्योतिषी से परामर्श करें।',
     'charts.delete': 'हटाएँ',
     'charts.deleteAria': 'कुंडली हटाएँ:',
     'charts.deleteConfirm': '“{name}” की कुंडली हटाएँ?',
@@ -479,8 +511,36 @@ const KOOTA_HI: Record<string, string> = {
 const GRAHA_HI: Record<string, string> = {
   SUN: 'सूर्य', MOON: 'चंद्र', MARS: 'मंगल', MERCURY: 'बुध',
   JUPITER: 'गुरु', VENUS: 'शुक्र', SATURN: 'शनि',
+  RAHU: 'राहु', KETU: 'केतु',
   Sun: 'सूर्य', Moon: 'चंद्र', Mars: 'मंगल', Mercury: 'बुध',
-  Jupiter: 'गुरु', Venus: 'शुक्र', Saturn: 'शनि',
+  Jupiter: 'गुरु', Venus: 'शुक्र', Saturn: 'शनि', Rahu: 'राहु', Ketu: 'केतु',
+};
+
+/**
+ * Kundli-attribute vocabularies, keyed by the backend's stable UPPER_CASE codes.
+ * Each entry is [English, Hindi]; unknown codes fall back to the raw code.
+ */
+const GANA_V: Record<string, [string, string]> = {
+  DEVA: ['Deva', 'देव'], MANUSHYA: ['Manushya', 'मनुष्य'], RAKSHASA: ['Rakshasa', 'राक्षस'],
+};
+const NADI_V: Record<string, [string, string]> = {
+  AADI: ['Aadi', 'आदि'], MADHYA: ['Madhya', 'मध्य'], ANTYA: ['Antya', 'अंत्य'],
+};
+const VARNA_V: Record<string, [string, string]> = {
+  BRAHMIN: ['Brahmin', 'ब्राह्मण'], KSHATRIYA: ['Kshatriya', 'क्षत्रिय'],
+  VAISHYA: ['Vaishya', 'वैश्य'], SHUDRA: ['Shudra', 'शूद्र'],
+};
+const VASHYA_V: Record<string, [string, string]> = {
+  CHATUSHPADA: ['Chatushpada (quadruped)', 'चतुष्पद'], MANAVA: ['Manava (human)', 'मानव'],
+  JALACHARA: ['Jalachara (aquatic)', 'जलचर'], VANACHARA: ['Vanachara (wild)', 'वनचर'],
+  KEETA: ['Keeta (insect)', 'कीट'],
+};
+const YONI_V: Record<string, [string, string]> = {
+  HORSE: ['Horse', 'अश्व'], ELEPHANT: ['Elephant', 'गज'], SHEEP: ['Sheep', 'मेष'],
+  SERPENT: ['Serpent', 'सर्प'], DOG: ['Dog', 'श्वान'], CAT: ['Cat', 'मार्जार'],
+  RAT: ['Rat', 'मूषक'], COW: ['Cow', 'गौ'], BUFFALO: ['Buffalo', 'महिष'],
+  TIGER: ['Tiger', 'व्याघ्र'], DEER: ['Deer', 'मृग'], MONKEY: ['Monkey', 'वानर'],
+  MONGOOSE: ['Mongoose', 'नकुल'], LION: ['Lion', 'सिंह'],
 };
 
 /**
@@ -532,6 +592,26 @@ export class I18nService {
 
   koota(name: string): string {
     return this.lang() === 'hi' ? (KOOTA_HI[name] ?? name) : name;
+  }
+
+  // ---- Kundli-attribute vocabularies (backend emits stable codes) ----
+
+  private vocab(map: Record<string, [string, string]>, code: string): string {
+    const entry = map[code];
+    if (!entry) return code;
+    return this.lang() === 'hi' ? entry[1] : entry[0];
+  }
+
+  gana(code: string): string { return this.vocab(GANA_V, code); }
+  nadi(code: string): string { return this.vocab(NADI_V, code); }
+  varna(code: string): string { return this.vocab(VARNA_V, code); }
+  vashya(code: string): string { return this.vocab(VASHYA_V, code); }
+  yoni(code: string): string { return this.vocab(YONI_V, code); }
+
+  /** Planet name for display: Hindi from the fixed table, else title-case the code. */
+  graha(name: string): string {
+    if (this.lang() === 'hi') return GRAHA_HI[name] ?? name;
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   }
 
   doshaName(name: string): string {

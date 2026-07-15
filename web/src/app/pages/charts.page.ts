@@ -136,6 +136,56 @@ import { DateFieldComponent } from '../components/date-field.component';
                 @if (c.placeName) { <span> — {{ c.placeName }}</span> }
               </p>
 
+              @if (c.attributes; as attr) {
+                <div class="attrs">
+                  <h4 class="attrs__title">{{ i18n.t('charts.attr.title') }}</h4>
+                  <dl class="attrs__grid">
+                    <div class="attr">
+                      <dt>{{ i18n.t('charts.attr.gana') }}</dt><dd>{{ i18n.gana(attr.gana) }}</dd>
+                    </div>
+                    <div class="attr">
+                      <dt>{{ i18n.t('charts.attr.nadi') }}</dt><dd>{{ i18n.nadi(attr.nadi) }}</dd>
+                    </div>
+                    <div class="attr">
+                      <dt>{{ i18n.t('charts.attr.yoni') }}</dt><dd>{{ i18n.yoni(attr.yoni) }}</dd>
+                    </div>
+                    <div class="attr">
+                      <dt>{{ i18n.t('charts.attr.varna') }}</dt><dd>{{ i18n.varna(attr.varna) }}</dd>
+                    </div>
+                    <div class="attr">
+                      <dt>{{ i18n.t('charts.attr.vashya') }}</dt><dd>{{ i18n.vashya(attr.vashya) }}</dd>
+                    </div>
+                    <div class="attr">
+                      <dt>{{ i18n.t('charts.attr.moonLord') }}</dt><dd>{{ i18n.graha(attr.moonSignLord) }}</dd>
+                    </div>
+                  </dl>
+
+                  @if (attr.seventhHouse; as h) {
+                    <div class="house7">
+                      <div class="house7__head">
+                        <span class="house7__title">{{ i18n.t('charts.house7.title') }}</span>
+                        <span class="pill" [class]="'pill--' + assessTone(h.assessment)">
+                          {{ i18n.t('charts.house7.' + h.assessment) }}
+                        </span>
+                      </div>
+                      <p class="house7__line muted small">
+                        {{ i18n.t('charts.house7.sign') }}: {{ i18n.rashi(h.sign) }}
+                        · {{ i18n.t('charts.house7.lord') }}: {{ i18n.graha(h.lord) }}
+                        · {{ i18n.t('charts.house7.occupants') }}:
+                        @if (h.occupants.length === 0) {
+                          <span>{{ i18n.t('charts.house7.empty') }}</span>
+                        } @else {
+                          @for (o of h.occupants; track o.graha) {
+                            <span class="occ" [class.occ--malefic]="!o.benefic">{{ i18n.graha(o.graha) }}</span>
+                          }
+                        }
+                      </p>
+                      <p class="house7__note muted">{{ i18n.t('charts.house7.note') }}</p>
+                    </div>
+                  }
+                </div>
+              }
+
               @for (w of c.warnings; track w) {
                 <div class="banner banner--warn small">
                   <span aria-hidden="true">◭</span>
@@ -191,6 +241,32 @@ import { DateFieldComponent } from '../components/date-field.component';
     .chart__badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 8px; }
     .chart__meta { margin: 0 0 4px; }
     .chart .banner { margin-top: 9px; }
+
+    .attrs { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+    .attrs__title { font-size: 13px; margin: 0 0 8px; color: var(--gold-text);
+                    text-transform: uppercase; letter-spacing: .04em; }
+    .attrs__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 14px; margin: 0; }
+    @media (max-width: 520px) { .attrs__grid { grid-template-columns: repeat(2, 1fr); } }
+    .attr { display: flex; flex-direction: column; gap: 1px; }
+    .attr dt { font-size: 11px; color: var(--muted); }
+    .attr dd { margin: 0; font-size: 14px; font-weight: 500; }
+
+    .house7 { margin-top: 12px; padding: 11px 13px; border: 1px solid var(--border);
+              border-radius: var(--radius); background: rgba(0, 0, 0, 0.02); }
+    .house7__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .house7__title { font-size: 14px; font-weight: 600; }
+    .house7__line { margin: 7px 0 0; }
+    .house7__note { margin: 7px 0 0; font-size: 11px; line-height: 1.45; }
+
+    .pill { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
+            white-space: nowrap; border: 1px solid transparent; }
+    .pill--good { background: rgba(46, 160, 67, 0.14); color: #1a7f37; border-color: rgba(46, 160, 67, 0.35); }
+    .pill--warn { background: rgba(191, 135, 0, 0.14); color: #9a6700; border-color: rgba(191, 135, 0, 0.35); }
+    .pill--bad  { background: rgba(207, 34, 46, 0.12); color: #b42318; border-color: rgba(207, 34, 46, 0.35); }
+
+    .occ { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+           font-size: 12px; background: rgba(46, 160, 67, 0.12); color: #1a7f37; }
+    .occ--malefic { background: rgba(207, 34, 46, 0.10); color: #b42318; }
   `],
 })
 export class ChartsPage implements OnInit {
@@ -239,6 +315,11 @@ export class ChartsPage implements OnInit {
 
   isPrimary(c: ChartResponse): boolean {
     return this.profile()?.primaryChartId === c.id;
+  }
+
+  /** Map a 7th-house assessment code to a pill tone (good / warn / bad). */
+  assessTone(assessment: 'FAVOURABLE' | 'MIXED' | 'NEEDS_ATTENTION'): string {
+    return assessment === 'FAVOURABLE' ? 'good' : assessment === 'MIXED' ? 'warn' : 'bad';
   }
 
   setAsPrimary(c: ChartResponse): void {

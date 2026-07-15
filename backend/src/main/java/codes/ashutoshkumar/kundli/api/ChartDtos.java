@@ -2,6 +2,7 @@ package codes.ashutoshkumar.kundli.api;
 
 import codes.ashutoshkumar.kundli.ashtakoot.model.Nakshatra;
 import codes.ashutoshkumar.kundli.ashtakoot.model.Rashi;
+import codes.ashutoshkumar.kundli.attributes.KundliAttributes;
 import codes.ashutoshkumar.kundli.chart.BirthChart;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -37,9 +38,21 @@ public final class ChartDtos {
             List<String> warnings,
             String ayanamsa,
             String precision,
-            String createdAt
+            String createdAt,
+            /**
+             * Descriptive kundli attributes (Gana, Nadi, Yoni, 7th house, …). Nullable:
+             * {@code null} on responses that don't enrich the chart (e.g. the profile's
+             * primary-chart pointer), so existing callers of {@link #from(BirthChart)}
+             * are unaffected.
+             */
+            KundliAttributes attributes
     ) {
+        /** Backward-compatible view with no derived attributes. */
         public static ChartResponse from(BirthChart c) {
+            return from(c, null);
+        }
+
+        public static ChartResponse from(BirthChart c, KundliAttributes attributes) {
             return new ChartResponse(
                     c.getId(),
                     c.getLabel(),
@@ -57,7 +70,8 @@ public final class ChartDtos {
                     c.getWarnings() == null ? List.of() : List.of(c.getWarnings().split("\n")),
                     c.getAyanamsa(),
                     c.getPrecision(),
-                    c.getCreatedAt());
+                    c.getCreatedAt(),
+                    attributes);
         }
     }
 }

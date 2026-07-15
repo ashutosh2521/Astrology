@@ -1,5 +1,36 @@
 /** Mirrors the backend API DTOs. */
 
+/** A planet occupying the 7th house, with its natural benefic/malefic nature. */
+export interface SeventhHouseOccupant {
+  graha: string;     // "Sun" … "Ketu"
+  benefic: boolean;
+}
+
+/** 7th-house (marriage house) read — a first-pass indicator, not a full reading. */
+export interface SeventhHouse {
+  lagnaSign: string;   // Ascendant Rashi (title-case Sanskrit)
+  sign: string;        // 7th-house Rashi, whole-sign from Lagna
+  lord: string;        // Graha ruling the 7th sign (UPPER_CASE code)
+  occupants: SeventhHouseOccupant[];
+  assessment: 'FAVOURABLE' | 'MIXED' | 'NEEDS_ATTENTION';
+}
+
+/**
+ * Descriptive kundli attributes derived from a single chart. All values are stable
+ * UPPER_CASE codes translated in the frontend (like the koota results). `null` when
+ * the response doesn't enrich the chart; `seventhHouse` is `null` on legacy charts
+ * stored before the Ascendant was captured.
+ */
+export interface KundliAttributes {
+  gana: string;          // DEVA / MANUSHYA / RAKSHASA
+  nadi: string;          // AADI / MADHYA / ANTYA
+  yoni: string;          // HORSE / ELEPHANT / …
+  varna: string;         // BRAHMIN / KSHATRIYA / VAISHYA / SHUDRA
+  vashya: string;        // CHATUSHPADA / MANAVA / …
+  moonSignLord: string;  // SUN / MOON / … ruling the Moon Rashi
+  seventhHouse: SeventhHouse | null;
+}
+
 export interface ChartResponse {
   id: number;
   label: string;
@@ -16,6 +47,7 @@ export interface ChartResponse {
   ayanamsa: string;
   precision: string;
   createdAt: string;
+  attributes: KundliAttributes | null;
 }
 
 /** One place returned by the online birthplace geocoder (`GET /api/geocode`). */

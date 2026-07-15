@@ -2,6 +2,8 @@ package codes.ashutoshkumar.kundli.api;
 
 import codes.ashutoshkumar.kundli.api.ChartDtos.ChartResponse;
 import codes.ashutoshkumar.kundli.api.ChartDtos.CreateChartRequest;
+import codes.ashutoshkumar.kundli.attributes.KundliAttributesService;
+import codes.ashutoshkumar.kundli.chart.BirthChart;
 import codes.ashutoshkumar.kundli.chart.BirthChartService;
 import codes.ashutoshkumar.kundli.chart.BirthChartService.CreateChartCommand;
 import jakarta.validation.Valid;
@@ -21,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChartController {
 
     private final BirthChartService service;
+    private final KundliAttributesService attributes;
 
-    public ChartController(BirthChartService service) {
+    public ChartController(BirthChartService service, KundliAttributesService attributes) {
         this.service = service;
+        this.attributes = attributes;
     }
 
     @PostMapping
@@ -32,17 +36,22 @@ public class ChartController {
         var chart = service.create(new CreateChartCommand(
                 req.label(), req.birthLocalDateTime(), req.timezone(),
                 req.latitude(), req.longitude(), req.placeName()));
-        return ChartResponse.from(chart);
+        return enrich(chart);
     }
 
     @GetMapping
     public List<ChartResponse> list() {
-        return service.list().stream().map(ChartResponse::from).toList();
+        return service.list().stream().map(this::enrich).toList();
     }
 
     @GetMapping("/{id}")
     public ChartResponse get(@PathVariable long id) {
-        return ChartResponse.from(service.get(id));
+        return enrich(service.get(id));
+    }
+
+    /** Attach derived kundli attributes (Gana, Nadi, Yoni, 7th house, …) to the response. */
+    private ChartResponse enrich(BirthChart chart) {
+        return ChartResponse.from(chart, attributes.derive(chart));
     }
 
     @DeleteMapping("/{id}")

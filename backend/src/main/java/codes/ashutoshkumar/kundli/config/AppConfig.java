@@ -1,6 +1,7 @@
 package codes.ashutoshkumar.kundli.config;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootEngine;
+import codes.ashutoshkumar.kundli.ashtakoot.tables.ReferenceTables;
 import codes.ashutoshkumar.kundli.geocode.GeocodingProperties;
 import codes.ashutoshkumar.kundli.manglik.ManglikEngine;
 import java.time.Duration;
@@ -16,12 +17,20 @@ import org.springframework.web.client.RestClient;
 public class AppConfig {
 
     /**
-     * The engine loads and strictly validates all reference tables at startup, so a
-     * broken table fails app boot rather than a match request.
+     * All static Ashtakoot reference tables, loaded and strictly validated once at
+     * startup so a broken table fails app boot rather than a match request. Exposed
+     * as its own bean because more than one component now reads it — the matching
+     * engine, and the read-only kundli-attributes derivation (Gana/Nadi/Yoni/7th
+     * house) — and both must share the same validated instance.
      */
     @Bean
-    public AshtakootEngine ashtakootEngine() {
-        return AshtakootEngine.create();
+    public ReferenceTables referenceTables() {
+        return ReferenceTables.load();
+    }
+
+    @Bean
+    public AshtakootEngine ashtakootEngine(ReferenceTables referenceTables) {
+        return new AshtakootEngine(referenceTables);
     }
 
     /**
