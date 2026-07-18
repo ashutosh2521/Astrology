@@ -25,6 +25,22 @@ import { I18nService } from '../core/i18n.service';
                  [class.row__fill--zero]="k.points === 0"
                  [style.width.%]="k.maxPoints > 0 ? (k.points / k.maxPoints) * 100 : 0"></div>
           </div>
+          <!--
+            Per-person values (e.g. Gana: Rakshasa vs Deva, Yoni: Horse vs
+            Sheep). This is the concrete "why" behind each score, previously
+            only visible in the print table.
+          -->
+          <div class="row__values">
+            <span class="val">
+              @if (boyLabel()) { <span class="val__who">{{ boyLabel() }}:</span> }
+              <span class="val__v">{{ i18n.kootaValue(k.code, k.personAValue) }}</span>
+            </span>
+            <span class="val__vs" aria-hidden="true">↔</span>
+            <span class="val">
+              @if (girlLabel()) { <span class="val__who">{{ girlLabel() }}:</span> }
+              <span class="val__v">{{ i18n.kootaValue(k.code, k.personBValue) }}</span>
+            </span>
+          </div>
           <div class="row__detail">{{ k.detail }}</div>
         </li>
       }
@@ -60,6 +76,16 @@ import { I18nService } from '../core/i18n.service';
     /* A zero score still shows a 4px nub so "0" is visibly anchored, not missing */
     .row__fill--zero { min-width: 4px; background: var(--surface-3); }
 
+    .row__values {
+      display: flex; align-items: baseline; gap: 8px;
+      margin-top: 7px;
+      font-size: 13px;
+    }
+    .val { color: var(--ink-2); }
+    .val__who { color: var(--ink-3); font-size: 11.5px; margin-right: 3px; }
+    .val__v { font-weight: 600; color: var(--ink); }
+    .val__vs { color: var(--ink-3); font-size: 12px; }
+
     .row__detail {
       max-height: 0;
       overflow: hidden;
@@ -78,4 +104,7 @@ import { I18nService } from '../core/i18n.service';
 export class KootaBarsComponent {
   readonly i18n = inject(I18nService);
   readonly kootas = input.required<KootaScore[]>();
+  /** Optional person names shown beside each per-person value. */
+  readonly boyLabel = input<string | null>(null);
+  readonly girlLabel = input<string | null>(null);
 }

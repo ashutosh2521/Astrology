@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { AshtakootResult } from './models';
+import { AshtakootResult, KootaScore } from './models';
 
 export type Lang = 'en' | 'hi';
 
@@ -617,6 +617,28 @@ export class I18nService {
   varna(code: string): string { return this.vocab(VARNA_V, code); }
   vashya(code: string): string { return this.vocab(VASHYA_V, code); }
   yoni(code: string): string { return this.vocab(YONI_V, code); }
+
+  /**
+   * Translate a single koota's per-person value (e.g. "Rakshasa", "Horse",
+   * "Aadi", "Mesha") for display beside the bar. The engine emits these as
+   * title-case Sanskrit; route each koota to its matching vocabulary so
+   * Hindi renders too. Unknown koota types (Tara counts) fall back to the
+   * raw value, which is already readable.
+   */
+  kootaValue(code: KootaScore['code'], value: string): string {
+    if (!value) return '—';
+    const upper = value.toUpperCase();
+    switch (code) {
+      case 'GANA':   return this.vocab(GANA_V, upper);
+      case 'NADI':   return this.vocab(NADI_V, upper);
+      case 'VARNA':  return this.vocab(VARNA_V, upper);
+      case 'VASHYA': return this.vocab(VASHYA_V, upper);
+      case 'YONI':   return this.vocab(YONI_V, upper);
+      case 'BHAKOOT':      return this.rashi(value);
+      case 'GRAHA_MAITRI': return this.graha(value);
+      default:       return value; // Tara and anything new: raw title-case.
+    }
+  }
 
   /** Planet name for display: Hindi from the fixed table, else title-case the code. */
   graha(name: string): string {

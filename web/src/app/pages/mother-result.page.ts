@@ -105,7 +105,8 @@ import { ManglikCardComponent } from '../components/manglik-card.component';
           <div class="breakdown fade-in">
             <div class="card">
               <h2 class="section-title">{{ i18n.t('motherResult.breakdown.kootas') }}</h2>
-              <app-koota-bars [kootas]="m.result.kootas" />
+              <app-koota-bars [kootas]="m.result.kootas"
+                              [boyLabel]="m.boyLabel" [girlLabel]="m.girlLabel" />
             </div>
 
             <div class="card">
