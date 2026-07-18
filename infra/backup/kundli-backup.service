@@ -1,0 +1,12 @@
+[Unit]
+Description=Kundli nightly SQLite backup to S3
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=kundli
+Group=kundli
+EnvironmentFile=/etc/kundli/backend.env
+EnvironmentFile=/etc/kundli/backup.env
+ExecStart=/opt/kundli/src/infra/backup/kundli-backup.sh

@@ -1,0 +1,31 @@
+[Unit]
+Description=Kundli ephemeris service (Swiss Ephemeris, internal-only)
+Documentation=https://github.com/ashutosh2521/astrology
+After=network.target
+
+[Service]
+Type=simple
+User=kundli
+Group=kundli
+WorkingDirectory=/opt/kundli/src/ephemeris-service
+EnvironmentFile=/etc/kundli/ephemeris.env
+# Host/port are HARDCODED here, not read from the env file: the service must never
+# be reachable from outside the host (see ephemeris-service/README.md). Binding is a
+# deploy-time guarantee, not something an env file edit can accidentally flip to 0.0.0.0.
+ExecStart=/opt/kundli/src/ephemeris-service/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001
+Restart=on-failure
+RestartSec=5
+
+# --- Hardening: pure calculator, no state, no network callers ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+# Only loopback listening is expected; the .se1 data dir is read-only to the service.
+ReadOnlyPaths=/opt/kundli/ephe
+
+[Install]
+WantedBy=multi-user.target

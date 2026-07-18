@@ -1,0 +1,31 @@
+[Unit]
+Description=Kundli backend (Spring Boot API + Ashtakoot engine + embedded web)
+Documentation=https://github.com/ashutosh2521/astrology
+After=network.target kundli-ephemeris.service
+Wants=kundli-ephemeris.service
+
+[Service]
+Type=simple
+User=kundli
+Group=kundli
+WorkingDirectory=/opt/kundli/backend
+EnvironmentFile=/etc/kundli/backend.env
+ExecStart=/usr/bin/java -jar /opt/kundli/backend/kundli-backend.jar
+Restart=on-failure
+RestartSec=5
+
+# Creates and owns /var/lib/kundli (the SQLite file lives here; KUNDLI_DB_PATH points at it).
+StateDirectory=kundli
+StateDirectoryMode=0750
+
+# --- Hardening ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+# StateDirectory already grants write to /var/lib/kundli; everything else stays read-only.
+
+[Install]
+WantedBy=multi-user.target

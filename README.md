@@ -104,7 +104,7 @@ ephemeris-service/   Python ephemeris microservice (pyswisseph)
 backend/             Spring Boot API + Ashtakoot engine + reference tables + embedded web build
 web/                 Angular web client (built into the backend jar at package time)
 mobile/              Ionic + Capacitor Android wrapper (later)
-infra/               Nginx, systemd units, deploy notes (later)
+infra/               Nginx, systemd units, deploy script + runbook (see infra/DEPLOY.md)
 docs/                Design notes, ADRs, the original spec
 ```
 
