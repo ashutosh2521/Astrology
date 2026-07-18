@@ -3,7 +3,9 @@
 Deployment infrastructure for the single-EC2, no-Docker, systemd architecture (root
 [`README.md`](../README.md), build-order step 6). Nginx terminates TLS and reverse-proxies
 to Spring Boot (`:8080`), which serves the API and the embedded Angular build and calls the
-Python ephemeris service (`127.0.0.1:8001`). SQLite is a file on disk.
+Python ephemeris service (`127.0.0.1:8001`). SQLite is a file on disk. A loopback-only
+Spring Boot Admin server (`127.0.0.1:9090`, the `monitoring/` module) watches the backend and
+emails alerts — see [`DEPLOY.md`](./DEPLOY.md) §7.
 
 **Start here: [`DEPLOY.md`](./DEPLOY.md)** — one-time host setup, first deploy, TLS, and the
 repeatable deploy command.
@@ -16,6 +18,7 @@ repeatable deploy command.
 | `deploy.sh` | Repeatable deploy: pull, build jar, refresh venv, restart, health-check. Runs on the host. |
 | `systemd/kundli-ephemeris.service` | Ephemeris service unit. Loopback bind hardcoded; hardened sandbox. |
 | `systemd/kundli-backend.service` | Backend unit. `StateDirectory=kundli` owns `/var/lib/kundli`. |
+| `systemd/kundli-admin.service` | Monitoring (Spring Boot Admin) server unit. Loopback-only. |
 | `nginx/kundli.ashutoshkumar.codes.conf` | Server block: HTTP→HTTPS redirect, ACME webroot, TLS reverse proxy. |
 | `env/*.env.example` | Templates copied to `/etc/kundli/*.env` (chmod 640). No secrets committed. |
 | `backup/` | Nightly `sqlite3 .backup` → S3, as a systemd service + timer. |

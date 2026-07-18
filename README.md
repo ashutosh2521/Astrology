@@ -35,6 +35,9 @@ Ionic/Android app ───┘        (kundli.ashutoshkumar.codes)              
 - **Python ephemeris service** — pure astronomical calculator over Swiss Ephemeris. Bound
   to `127.0.0.1` only. Under systemd (uvicorn/gunicorn).
 - **SQLite** — single file on disk. No server process. Backed up by nightly copy to S3.
+- **Monitoring** — a loopback-only **Spring Boot Admin** server (`monitoring/`) tracks the
+  backend's health (including the ephemeris precision guard) and emails on outage. Reached
+  over an SSH tunnel, never exposed. See [`infra/DEPLOY.md`](./infra/DEPLOY.md) §7.
 
 Security groups: only 443 (and 22 from a trusted IP) open. The ephemeris service and the
 database are unreachable externally by virtue of localhost binding + a file on disk.
@@ -104,6 +107,7 @@ ephemeris-service/   Python ephemeris microservice (pyswisseph)
 backend/             Spring Boot API + Ashtakoot engine + reference tables + embedded web build
 web/                 Angular web client (built into the backend jar at package time)
 mobile/              Ionic + Capacitor Android wrapper (later)
+monitoring/          Spring Boot Admin server — health dashboard + email alerts
 infra/               Nginx, systemd units, deploy script + runbook (see infra/DEPLOY.md)
 docs/                Design notes, ADRs, the original spec
 ```

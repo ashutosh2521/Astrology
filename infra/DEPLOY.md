@@ -6,6 +6,9 @@ single-EC2, no-Docker, systemd architecture described in the root [`README.md`](
 ```
 Nginx (TLS) ──> Spring Boot :8080 (serves API + embedded Angular) ──> SQLite file
                                      └──> Python ephemeris :8001 (127.0.0.1 only)
+
+Monitoring:  Spring Boot Admin :9090 (127.0.0.1 only) ── scrapes ──> backend Actuator :8081
+             (dashboard over SSH tunnel; emails alerts). See §7.
 ```
 
 Everything below runs on the EC2 host over SSH. Conventions used throughout:
@@ -44,7 +47,7 @@ Node under `target/`), so you do **not** need Node installed on the host.
 ### 1.2 Service user and directories
 ```bash
 sudo useradd --system --home-dir /opt/kundli --shell /usr/sbin/nologin kundli
-sudo mkdir -p /opt/kundli/backend /opt/kundli/ephe /etc/kundli /var/www/certbot
+sudo mkdir -p /opt/kundli/backend /opt/kundli/monitoring /opt/kundli/ephe /etc/kundli /var/www/certbot
 sudo git clone https://github.com/ashutosh2521/astrology.git /opt/kundli/src
 sudo chown -R kundli:kundli /opt/kundli
 ```
@@ -68,21 +71,24 @@ ls -l /opt/kundli/ephe/*.se1
 ```bash
 sudo cp /opt/kundli/src/infra/env/backend.env.example   /etc/kundli/backend.env
 sudo cp /opt/kundli/src/infra/env/ephemeris.env.example /etc/kundli/ephemeris.env
+sudo cp /opt/kundli/src/infra/env/admin.env.example     /etc/kundli/admin.env
 sudo cp /opt/kundli/src/infra/env/backup.env.example    /etc/kundli/backup.env   # optional
 sudo chgrp kundli /etc/kundli/*.env && sudo chmod 640 /etc/kundli/*.env
 ```
-Edit `/etc/kundli/backup.env` and set `KUNDLI_S3_BUCKET` if you want the nightly backup.
+Edit `/etc/kundli/admin.env` and set at least a strong `KUNDLI_ADMIN_PASSWORD` (see §7 for
+the email settings). Edit `/etc/kundli/backup.env` and set `KUNDLI_S3_BUCKET` if you want the
+nightly backup.
 
 ### 1.5 Install the systemd units
 ```bash
 sudo cp /opt/kundli/src/infra/systemd/*.service /etc/systemd/system/
 sudo cp /opt/kundli/src/infra/backup/kundli-backup.{service,timer} /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable kundli-ephemeris.service kundli-backend.service
+sudo systemctl enable kundli-ephemeris.service kundli-backend.service kundli-admin.service
 sudo systemctl enable --now kundli-backup.timer      # optional, if S3 is configured
 ```
-Leave the two app services *enabled but not started* — the first `deploy.sh` run builds
-the jar and starts them.
+Leave the app services *enabled but not started* — the first `deploy.sh` run builds the
+jars and starts them.
 
 ---
 
@@ -176,3 +182,44 @@ sudo /opt/kundli/src/infra/deploy.sh <previous-tag-or-sha>
 ```
 The SQLite schema uses `ddl-auto=update` (additive), so rolling code back is generally safe;
 a restore ([§5](#5-operating)) is only needed if a migration was destructive.
+
+## 7. Monitoring (Spring Boot Admin)
+
+A small **Spring Boot Admin** server (the `monitoring/` module) watches the backend and
+emails you when something breaks. The backend registers with it and exposes Actuator on a
+**loopback-only** port (`8081`, never proxied by Nginx); the Admin server scrapes that and
+tracks the `ephemeris` health component too — so a **degraded Swiss Ephemeris precision**
+(the 503 guard) shows up as DOWN and triggers an alert, not just a hard crash.
+
+`deploy.sh` builds and restarts it alongside the backend; the unit was installed and enabled
+in [§1.5](#15-install-the-systemd-units). It runs on `127.0.0.1:9090` and is **never exposed
+to the internet** — no Nginx block, no open port.
+
+### Email alerts
+
+Edit `/etc/kundli/admin.env` (already copied in [§1.4](#14-environment-files)) and fill in
+your SMTP details and alert address — `KUNDLI_SMTP_HOST/PORT/USER/PASSWORD`, `KUNDLI_ALERT_TO`,
+`KUNDLI_ALERT_FROM`. Amazon SES SMTP or a Gmail app-password both work; the template has an SES
+example. Leave `KUNDLI_SMTP_HOST` empty to run the dashboard without email. Restart after edits:
+```bash
+sudo systemctl restart kundli-admin
+```
+You'll get an email whenever the backend (or the ephemeris component) transitions DOWN/OFFLINE,
+and again when it recovers.
+
+> Note: the Admin server runs *on the same host*, so it can't email you if the whole box is
+> down. To catch total-host outages, point a free external pinger (Healthchecks.io / UptimeRobot)
+> at `https://kundli.ashutoshkumar.codes/api/health` as well.
+
+### Viewing the dashboard
+
+The dashboard isn't public. Open an SSH tunnel from your machine, then browse locally:
+```bash
+ssh -L 9090:127.0.0.1:9090 your-ec2-host
+# then open http://localhost:9090 and log in with KUNDLI_ADMIN_USER / KUNDLI_ADMIN_PASSWORD
+```
+
+### Disabling it
+
+Set `KUNDLI_ADMIN_ENABLED=false` in `/etc/kundli/backend.env` (the backend stops registering),
+then `sudo systemctl disable --now kundli-admin`. The backend runs fine without it.

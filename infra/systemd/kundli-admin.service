@@ -1,0 +1,26 @@
+[Unit]
+Description=Kundli monitoring (Spring Boot Admin server: dashboard + email alerts)
+Documentation=https://github.com/ashutosh2521/astrology
+After=network.target kundli-backend.service
+Wants=kundli-backend.service
+
+[Service]
+Type=simple
+User=kundli
+Group=kundli
+WorkingDirectory=/opt/kundli/monitoring
+EnvironmentFile=/etc/kundli/admin.env
+ExecStart=/usr/bin/java -jar /opt/kundli/monitoring/kundli-monitoring.jar
+Restart=on-failure
+RestartSec=5
+
+# --- Hardening ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target

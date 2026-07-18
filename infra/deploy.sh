@@ -12,6 +12,7 @@ set -euo pipefail
 
 SRC_DIR="${KUNDLI_SRC_DIR:-/opt/kundli/src}"
 BACKEND_DIR="${KUNDLI_BACKEND_DIR:-/opt/kundli/backend}"
+MON_DIR="${KUNDLI_MON_DIR:-/opt/kundli/monitoring}"
 EPHE_DIR="${KUNDLI_EPHE_DIR:-/opt/kundli/ephe}"
 APP_USER="${KUNDLI_USER:-kundli}"
 GIT_REF="${1:-}"
@@ -46,6 +47,21 @@ log "Built $JAR"
 
 install -o "$APP_USER" -g "$APP_USER" -m 0644 "$JAR" "$BACKEND_DIR/kundli-backend.jar"
 
+# 3b. Build the monitoring (Spring Boot Admin) jar. Skipped only if the module is absent
+#     (e.g. deploying an older ref) so this script stays compatible with pre-monitoring tags.
+if [[ -f "$SRC_DIR/monitoring/pom.xml" ]]; then
+    log "Building monitoring jar"
+    ( cd "$SRC_DIR/monitoring" && mvn -q -B clean package -DskipTests )
+    MON_JAR="$(ls -t "$SRC_DIR"/monitoring/target/kundli-monitoring-*.jar | head -1)"
+    [[ -n "$MON_JAR" ]] || die "monitoring build produced no jar."
+    install -o "$APP_USER" -g "$APP_USER" -m 0644 "$MON_JAR" "$MON_DIR/kundli-monitoring.jar"
+    log "Built $MON_JAR"
+    DEPLOY_MONITORING=1
+else
+    log "No monitoring/ module at this ref — skipping."
+    DEPLOY_MONITORING=0
+fi
+
 # 4. Refresh the ephemeris virtualenv.
 log "Refreshing ephemeris virtualenv"
 VENV="$SRC_DIR/ephemeris-service/.venv"
@@ -58,6 +74,10 @@ chown -R "$APP_USER:$APP_USER" "$VENV"
 log "Restarting services"
 systemctl restart kundli-ephemeris.service
 systemctl restart kundli-backend.service
+# Restart monitoring only if its unit is installed on this host.
+if [[ "$DEPLOY_MONITORING" -eq 1 ]] && systemctl list-unit-files kundli-admin.service >/dev/null 2>&1; then
+    systemctl restart kundli-admin.service || log "kundli-admin restart failed (non-fatal) — check its unit/env."
+fi
 
 # 6. Health checks — the ephemeris /health returns 503 if it degraded to Moshier fallback.
 log "Health checks"
@@ -71,5 +91,10 @@ for i in $(seq 1 10); do
     [[ $i -eq 10 ]] && die "backend health check failed — check: journalctl -u kundli-backend -n 50"
     sleep 2
 done
+# Monitoring is non-critical to serving traffic, so a failure here warns, doesn't abort.
+if [[ "$DEPLOY_MONITORING" -eq 1 ]] && systemctl is-active --quiet kundli-admin.service; then
+    curl -fsS http://127.0.0.1:9090/actuator/health >/dev/null 2>&1 && echo "  monitoring: OK" \
+        || log "monitoring health check failed — check: journalctl -u kundli-admin -n 50"
+fi
 
 log "Deploy complete."
