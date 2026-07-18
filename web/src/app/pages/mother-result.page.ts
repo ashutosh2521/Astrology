@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { AshtakootResult, DoshaStatus, ManglikStatus, MatchResponse, RecommendationCategory } from '../core/models';
+import { ApiService } from '../core/api.service';
 import { I18nService } from '../core/i18n.service';
 import { PlatformService } from '../core/platform.service';
 import { KootaBarsComponent } from '../components/koota-bars.component';
@@ -270,7 +270,7 @@ import { ManglikCardComponent } from '../components/manglik-card.component';
   `],
 })
 export class MotherResultPage implements OnInit {
-  private readonly http = inject(HttpClient);
+  private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly platform = inject(PlatformService);
   readonly i18n = inject(I18nService);
@@ -307,7 +307,7 @@ export class MotherResultPage implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) { this.loading.set(false); return; }
-    this.http.get<MatchResponse>(`/api/matches/${id}`).subscribe({
+    this.api.getMatch(id).subscribe({
       next: m => { this.match.set(m); this.loading.set(false); },
       error: () => this.loading.set(false),
     });

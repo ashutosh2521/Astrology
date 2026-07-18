@@ -17,11 +17,22 @@ const config: CapacitorConfig = {
   appId: 'codes.ashutoshkumar.kundli',
   appName: 'Kundli',
   webDir: 'dist/web/browser',
-  // The Android WebView needs an explicit http(s) scheme to satisfy
-  // Chromium security assumptions. localhost + https means /api requests
-  // still resolve through Nginx on the server (same origin as production).
+  // The Android WebView needs an explicit http(s) scheme to satisfy Chromium
+  // security assumptions, so the bundled app is served from https://localhost.
+  // That means relative /api paths resolve to the WebView itself, not the server —
+  // ApiService therefore prefixes an absolute production origin in native builds
+  // (see PlatformService.apiBaseUrl).
   server: {
     androidScheme: 'https',
+  },
+  plugins: {
+    // Route fetch/XHR through native HTTP in the app. The API calls above are
+    // cross-origin (https://localhost -> kundli.ashutoshkumar.codes); native HTTP
+    // makes them succeed without a CORS preflight, so the backend needs no
+    // Capacitor-specific CORS config. No effect on the web build.
+    CapacitorHttp: {
+      enabled: true,
+    },
   },
   android: {
     // Portrait-only — mother-mode UI is entirely tuned for portrait.

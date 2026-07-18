@@ -23,6 +23,23 @@ export class PlatformService {
   }
 
   /**
+   * Origin to prefix backend API calls with.
+   *
+   * <p>Web build → {@code ''}: Spring Boot serves the SPA and {@code /api} from the
+   * same origin, so relative paths resolve correctly.
+   *
+   * <p>Native build → the absolute production origin: the Capacitor WebView serves the
+   * bundled app from {@code https://localhost}, so a relative {@code /api/...} would hit
+   * the WebView's own assets (where no backend exists) and fail. These requests go
+   * cross-origin to the deployed API; the CapacitorHttp plugin (enabled in
+   * {@code capacitor.config.ts}) proxies them natively, so there is no CORS preflight
+   * against the server. If the deployment domain ever changes, update it here.
+   */
+  readonly apiBaseUrl = Capacitor.isNativePlatform()
+    ? 'https://kundli.ashutoshkumar.codes'
+    : '';
+
+  /**
    * Wire Android's hardware/gesture back button to the browser's history
    * stack. If there's nothing to go back to, exit the app rather than
    * getting stuck on the home page.
