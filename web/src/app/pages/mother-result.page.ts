@@ -4,6 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { AshtakootResult, DoshaStatus, ManglikStatus, MatchResponse, RecommendationCategory } from '../core/models';
 import { I18nService } from '../core/i18n.service';
 import { PlatformService } from '../core/platform.service';
+import { KootaBarsComponent } from '../components/koota-bars.component';
+import { DoshaCardComponent } from '../components/dosha-card.component';
+import { ManglikCardComponent } from '../components/manglik-card.component';
 
 /**
  * Mother-mode result view (spec §14).
@@ -20,7 +23,7 @@ import { PlatformService } from '../core/platform.service';
 @Component({
   selector: 'app-mother-result',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, KootaBarsComponent, DoshaCardComponent, ManglikCardComponent],
   template: `
     <section class="result">
       <a routerLink="/" class="back" aria-label="Home">←</a>
@@ -83,6 +86,43 @@ import { PlatformService } from '../core/platform.service';
                class="manglik-detail__more small">
               {{ i18n.t('motherResult.manglik.viewDetail') }} →
             </a>
+          </div>
+        }
+
+        <!--
+          Full breakdown, collapsed by default. Mother mode stays a
+          30-second glance, but the same detail the /advanced page shows
+          (all eight kootas incl. Gana, both dosha cards, the Manglik
+          per-reference grid) is one tap away, reusing the shared
+          components instead of a second hand-rolled layout.
+        -->
+        <button type="button" class="breakdown-toggle" (click)="showBreakdown.set(!showBreakdown())"
+                [attr.aria-expanded]="showBreakdown()">
+          {{ showBreakdown() ? i18n.t('motherResult.breakdown.hide') : i18n.t('motherResult.breakdown.show') }}
+        </button>
+
+        @if (showBreakdown()) {
+          <div class="breakdown fade-in">
+            <div class="card">
+              <h2 class="section-title">{{ i18n.t('motherResult.breakdown.kootas') }}</h2>
+              <app-koota-bars [kootas]="m.result.kootas" />
+            </div>
+
+            <div class="card">
+              <h2 class="section-title">{{ i18n.t('motherResult.breakdown.doshas') }}</h2>
+              <div class="doshas">
+                @for (d of m.result.doshas; track d.name) {
+                  <app-dosha-card [dosha]="d" />
+                }
+              </div>
+            </div>
+
+            @if (m.manglik) {
+              <app-manglik-card
+                [manglik]="m.manglik"
+                [boyLabel]="m.boyLabel"
+                [girlLabel]="m.girlLabel" />
+            }
           </div>
         }
 
@@ -185,6 +225,24 @@ import { PlatformService } from '../core/platform.service';
     .actions .btn { justify-content: center; padding: 14px 18px; font-size: 15px; }
     .actions .btn--sm { padding: 10px 14px; font-size: 13.5px; }
 
+    .breakdown-toggle {
+      display: block;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font: 600 14px/1.4 var(--font-body);
+      color: var(--gold-text);
+      cursor: pointer;
+    }
+    .breakdown-toggle:hover { border-color: var(--gold); }
+    .breakdown { display: flex; flex-direction: column; gap: 16px; margin-bottom: 18px; }
+    .breakdown .card { padding: 18px 20px; }
+    .section-title { font-size: 17px; margin: 0 0 14px; }
+    .doshas { display: flex; flex-direction: column; gap: 12px; }
+
     .manglik-detail {
       padding: 14px 16px;
       border-radius: var(--radius-sm);
@@ -218,6 +276,7 @@ export class MotherResultPage implements OnInit {
 
   readonly match = signal<MatchResponse | null>(null);
   readonly loading = signal(true);
+  readonly showBreakdown = signal(false);
 
   /**
    * Text-summary share. Routes through PlatformService which handles
