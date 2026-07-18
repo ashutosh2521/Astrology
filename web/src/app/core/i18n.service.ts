@@ -8,6 +8,7 @@ const STORAGE_KEY = 'kundli.lang';
 /** UI strings. Every key exists in both languages. */
 const MESSAGES: Record<Lang, Record<string, string>> = {
   en: {
+    'invocation': '॥ श्री गणेशाय नमः ॥',
     'brand.sub': 'Vedic Compatibility',
     'nav.charts': 'Charts',
     'nav.match': 'Match',
@@ -251,6 +252,7 @@ const MESSAGES: Record<Lang, Record<string, string>> = {
     'noneListed': 'None listed.',
   },
   hi: {
+    'invocation': '॥ श्री गणेशाय नमः ॥',
     'brand.sub': 'वैदिक कुंडली मिलान',
     'nav.charts': 'कुंडली',
     'nav.match': 'मिलान',

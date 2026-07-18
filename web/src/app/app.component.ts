@@ -10,6 +10,9 @@ import { PlatformService } from './core/platform.service';
   imports: [RouterOutlet, RouterLink],
   template: `
     <div class="shell">
+      <!-- Auspicious invocation — placed at the very top, as tradition holds. -->
+      <p class="invocation" lang="sa">{{ i18n.t('invocation') }}</p>
+
       <header class="topbar">
         <a routerLink="/" class="brand">
           <span class="brand__mark">✦</span>
@@ -40,6 +43,16 @@ import { PlatformService } from './core/platform.service';
     </div>
   `,
   styles: [`
+    .invocation {
+      margin: 0;
+      padding: 12px 0 0;
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      color: var(--gold-text);
+    }
+
     .topbar {
       display: flex;
       align-items: center;

@@ -50,6 +50,7 @@ interface Bundle {
           <!-- ===== PAGE 1 ===== -->
 
           <header class="report__head">
+            <p class="report__invocation" lang="sa">{{ i18n.t('invocation') }}</p>
             <h1 class="report__title">{{ i18n.t('report.title') }}</h1>
             <p class="report__names">
               {{ b.boy?.label ?? '—' }} <span class="amp">&</span> {{ b.girl?.label ?? '—' }}
@@ -279,6 +280,8 @@ interface Bundle {
     }
 
     .report__head { border-bottom: 2px solid #b8862d; padding-bottom: 14px; margin-bottom: 22px; }
+    .report__invocation { margin: 0 0 8px; font-family: var(--font-display); font-size: 15px;
+                          letter-spacing: 0.04em; color: #b8862d; }
     .report__title { font-family: var(--font-display); font-size: 26px; margin: 0; color: #111; }
     .report__names { font-size: 18px; margin: 6px 0 2px; color: #111; }
     .amp { color: #888; margin: 0 4px; }
