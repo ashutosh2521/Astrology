@@ -34,35 +34,56 @@ project pre-wired to `dist/web/browser`. Commit that whole folder EXCEPT the
 paths already in `.gitignore` (`.gradle/`, `build/`, `local.properties`, `.idea/`,
 `*.iml`, `capacitor-cordova-android-plugins/`).
 
-## 2. Generate the raster PWA icons from the SVG source
+## 2. Generate the raster PWA icons from the SVG sources
 
-The manifest declares three PNG sizes (192, 512, maskable 512) that the
-Android launcher and Chrome's install banner need. The SVG source at
-`web/public/icons/icon.svg` is what you rasterise from.
+Two scalable SVG sources live in `web/public/icons/`:
 
-Any of these three approaches works — pick one:
+- `icon.svg` — the rounded-corner app mark (favicon, Apple touch icon, the
+  `"any"` manifest PNGs).
+- `icon-maskable.svg` — a **full-bleed** variant whose mark sits inside the
+  Android maskable safe zone (central ~80%), so launchers can crop it to a
+  circle / squircle without clipping the star.
+
+From these we rasterise: `icon-192.png`, `icon-512.png`,
+`icon-maskable.png` (512), `apple-touch-icon.png` (180) and a
+multi-resolution `favicon.ico`.
+
+### Option A — one command with Python (recommended, no system deps)
 
 ```bash
-# Option A: rsvg-convert (Debian/Ubuntu: apt install librsvg2-bin)
-cd web/public/icons
-rsvg-convert -w 192 -h 192 icon.svg -o icon-192.png
-rsvg-convert -w 512 -h 512 icon.svg -o icon-512.png
-# Maskable: same 512 output; Android's launcher clips to safe zone.
-cp icon-512.png icon-maskable.png
-
-# Option B: ImageMagick
-magick -background none -density 512 icon.svg -resize 192x192 icon-192.png
-magick -background none -density 512 icon.svg -resize 512x512 icon-512.png
-cp icon-512.png icon-maskable.png
-
-# Option C: Inkscape
-inkscape -w 192 -h 192 icon.svg -o icon-192.png
-inkscape -w 512 -h 512 icon.svg -o icon-512.png
-cp icon-512.png icon-maskable.png
+pip install cairosvg pillow
+cd web/public
+python3 - <<'PY'
+import cairosvg, io
+from PIL import Image
+def r(p, s):
+    png = cairosvg.svg2png(url=p, output_width=s, output_height=s)
+    return Image.open(io.BytesIO(png)).convert("RGBA")
+r("icons/icon.svg", 192).save("icons/icon-192.png")
+r("icons/icon.svg", 512).save("icons/icon-512.png")
+r("icons/icon-maskable.svg", 512).save("icons/icon-maskable.png")
+r("icons/icon.svg", 180).save("icons/apple-touch-icon.png")
+r("icons/icon.svg", 256).save(
+    "favicon.ico", format="ICO",
+    sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
+PY
 ```
 
-Commit the three PNGs. They're small (< 15 kB each) and part of the release
-artefact.
+### Option B — rsvg-convert / ImageMagick / Inkscape
+
+```bash
+cd web/public/icons
+# pick your tool; repeat for each size
+rsvg-convert -w 192 -h 192 icon.svg          -o icon-192.png
+rsvg-convert -w 512 -h 512 icon.svg          -o icon-512.png
+rsvg-convert -w 512 -h 512 icon-maskable.svg -o icon-maskable.png
+rsvg-convert -w 180 -h 180 icon.svg          -o apple-touch-icon.png
+# favicon.ico (ImageMagick):
+magick -background none icon.svg -define icon:auto-resize=16,32,48,64 ../favicon.ico
+```
+
+Commit the generated PNGs and `favicon.ico`. They're small and part of the
+release artefact.
 
 ## 3. Generate the Android launcher icons
 

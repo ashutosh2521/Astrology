@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Kundli मिलान">
   <!--
-    App icon — Kundli मिलान (Vedic Kundli matching).
-    Gold Ashtakoot eight-pointed star inside a lotus-petal mandala ring,
-    on the app's dark radial backdrop. Single scalable source: the
-    favicon, Apple touch icon and manifest PNGs (192 / 512 / maskable)
-    are all rendered from this file — see docs/ANDROID_BUILD.md.
+    Maskable app icon — full-bleed dark background so Android launchers
+    can crop it to any shape (circle, squircle, rounded square). The gold
+    mark is scaled to sit inside the safe zone (central ~80%).
   -->
   <defs>
     <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -16,7 +14,7 @@
       <stop offset="0%"   stop-color="#e0b459"/>
       <stop offset="100%" stop-color="#a5741f"/>
     </linearGradient>
-    <radialGradient id="bg" cx="50%" cy="42%" r="72%">
+    <radialGradient id="bg" cx="50%" cy="42%" r="80%">
       <stop offset="0%"   stop-color="#20233a"/>
       <stop offset="55%"  stop-color="#141628"/>
       <stop offset="100%" stop-color="#0d0e17"/>
@@ -28,19 +26,13 @@
     </radialGradient>
   </defs>
 
-  <!-- Dark rounded backdrop -->
-  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
-
-  <!-- Soft central glow -->
+  <!-- Full-bleed backdrop (no rounded corners — launcher masks it) -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#bg)"/>
   <circle cx="256" cy="256" r="200" fill="url(#glow)"/>
 
-  <!-- Thin gold framing ring for contrast on light launchers -->
-  <rect x="20" y="20" width="472" height="472" rx="96"
-        fill="none" stroke="url(#goldSoft)" stroke-width="3" opacity="0.4"/>
-
-  <g transform="translate(256 256)">
-    <!-- Lotus-petal mandala ring: 12 slender petals -->
-    <g fill="none" stroke="url(#goldSoft)" stroke-width="4"
+  <!-- Mark scaled to ~0.78 to stay within the maskable safe zone -->
+  <g transform="translate(256 256) scale(0.78)">
+    <g fill="none" stroke="url(#goldSoft)" stroke-width="5"
        stroke-linecap="round" opacity="0.5">
       <g id="petal-set">
         <path d="M0,-186 C22,-158 22,-128 0,-108 C-22,-128 -22,-158 0,-186 Z"/>
@@ -58,18 +50,15 @@
       <use href="#petal-set" transform="rotate(330)"/>
     </g>
 
-    <!-- Inner guide circle -->
     <circle r="112" fill="none" stroke="url(#goldSoft)"
-            stroke-width="2" opacity="0.35"/>
+            stroke-width="2.5" opacity="0.35"/>
 
-    <!-- Ashtakoot eight-pointed star (two overlaid four-point stars) -->
     <g fill="url(#gold)">
       <polygon points="0,-132 30,-30 132,0 30,30 0,132 -30,30 -132,0 -30,-30"/>
       <polygon points="0,-132 30,-30 132,0 30,30 0,132 -30,30 -132,0 -30,-30"
                transform="rotate(45)" opacity="0.7"/>
     </g>
 
-    <!-- Center gem -->
     <circle r="26" fill="#0d0e17"/>
     <circle r="20" fill="url(#gold)"/>
     <circle r="8"  fill="#fff3d4"/>
