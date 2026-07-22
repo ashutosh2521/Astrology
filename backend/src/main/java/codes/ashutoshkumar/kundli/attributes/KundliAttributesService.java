@@ -62,12 +62,19 @@ public class KundliAttributesService {
     }
 
     /**
-     * Whole-sign 7th house from the Lagna. Returns {@code null} for legacy charts
-     * stored before the Ascendant was captured — the frontend renders the rest of the
-     * attributes and simply omits the house block.
+     * Whole-sign 7th house from the Lagna.
+     *
+     * <p>The dedicated {@code ascendantLongitude} column is preferred when present.
+     * For charts stored before that column was added (it arrived with the Manglik
+     * milestone) the Ascendant is still available in the {@code chartJson} blob —
+     * the ephemeris service has always computed it. We fall back to the blob so that
+     * EVERY chart can show its 7th-house indicator without recomputing.
      */
     private SeventhHouse seventhHouse(BirthChart chart) {
         Double ascendantLongitude = chart.getAscendantLongitude();
+        if (ascendantLongitude == null) {
+            ascendantLongitude = ascendantFromJson(chart.getChartJson());
+        }
         if (ascendantLongitude == null) {
             return null;
         }
@@ -84,6 +91,22 @@ public class KundliAttributesService {
                 seventhLord.name(),
                 occupants,
                 assess(occupants));
+    }
+
+    /**
+     * Extract the Ascendant longitude from the stored chart JSON blob. Returns
+     * {@code null} if the blob is absent, unparseable, or predates the ascendant
+     * field — all treated identically: no house block is shown.
+     */
+    private Double ascendantFromJson(String chartJson) {
+        if (chartJson == null) return null;
+        try {
+            JsonNode root = mapper.readTree(chartJson);
+            JsonNode lon = root.path("ascendant").path("longitude");
+            return lon.isMissingNode() ? null : lon.asDouble();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** Grahas whose sidereal sign (from the stored chart JSON) is {@code signNumber} (1..12). */

@@ -1,6 +1,7 @@
 package codes.ashutoshkumar.kundli.attributes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -89,7 +90,35 @@ class KundliAttributesServiceTest {
     }
 
     @Test
-    void legacyChartWithoutAscendantHasNoSeventhHouse() {
-        assertNull(service.derive(chart(null, "")).seventhHouse());
+    void legacyChartFallsBackToAscendantInChartJson() {
+        // ascendantLongitude column is null (pre-Manglik chart) but chartJson has the ascendant.
+        // The service must derive the 7th house from the blob rather than returning null.
+        BirthChart legacy = new BirthChart(
+                "Legacy", "1985-03-10T08:30:00", "Asia/Kolkata",
+                25.6, 85.1, "Patna", "1985-03-10T03:00:00Z",
+                1, 1, 1, 5.0, 5.0,
+                null,   // <-- ascendantLongitude column absent
+                null, null, null, "LAHIRI", "SWISS_EPHEMERIS_FULL",
+                // chartJson always had the ascendant — 15° = Mesha lagna → 7th is Tula
+                "{\"ascendant\":{\"longitude\":15.0},\"grahas\":[]}",
+                "2024-01-01T00:00:00Z");
+
+        SeventhHouse h = service.derive(legacy).seventhHouse();
+        assertNotNull(h, "7th house must be derived from chartJson when column is null");
+        assertEquals("Mesha", h.lagnaSign());
+        assertEquals("Tula", h.sign());
+    }
+
+    @Test
+    void legacyChartWithTrulyMissingAscendantHasNoSeventhHouse() {
+        // Neither the column nor the blob carries an ascendant — nothing to show.
+        BirthChart noAscendant = new BirthChart(
+                "Old", "1985-03-10T08:30:00", "Asia/Kolkata",
+                25.6, 85.1, null, "1985-03-10T03:00:00Z",
+                1, 1, 1, 5.0, 5.0,
+                null, null, null, null, "LAHIRI", "SWISS_EPHEMERIS_FULL",
+                "{\"grahas\":[]}", "2024-01-01T00:00:00Z");
+
+        assertNull(service.derive(noAscendant).seventhHouse());
     }
 }
