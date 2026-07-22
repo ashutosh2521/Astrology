@@ -116,6 +116,16 @@ public class BirthChartService {
         return repository.findById(id).map(BirthChart::getLabel).orElse(null);
     }
 
+    /**
+     * Full chart if it still exists, otherwise {@code null}. Same semantics as
+     * {@link #findLabel(long)} — callers that display a stored match must tolerate
+     * a deleted chart rather than propagating a 404.
+     */
+    @Transactional(readOnly = true)
+    public BirthChart findChart(long id) {
+        return repository.findById(id).orElse(null);
+    }
+
     @Transactional(readOnly = true)
     public List<BirthChart> list() {
         return repository.findAll();

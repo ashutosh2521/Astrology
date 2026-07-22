@@ -194,6 +194,10 @@ export interface MatchResponse {
   rulesVersion: string;
   ruleMetadata: RuleMetadata;
   createdAt: string;
+  /** Kundli attributes for the boy's chart. Null if chart was deleted. */
+  boyAttributes: KundliAttributes | null;
+  /** Kundli attributes for the girl's chart. Null if chart was deleted. */
+  girlAttributes: KundliAttributes | null;
 }
 
 /**

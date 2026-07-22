@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AshtakootResult, DoshaStatus, ManglikStatus, MatchResponse, RecommendationCategory } from '../core/models';
+import { AshtakootResult, DoshaStatus, KundliAttributes, ManglikStatus, MatchResponse, RecommendationCategory, SeventhHouse } from '../core/models';
 import { ApiService } from '../core/api.service';
 import { I18nService } from '../core/i18n.service';
 import { PlatformService } from '../core/platform.service';
@@ -123,6 +123,64 @@ import { ManglikCardComponent } from '../components/manglik-card.component';
                 [manglik]="m.manglik"
                 [boyLabel]="m.boyLabel"
                 [girlLabel]="m.girlLabel" />
+            }
+
+            @if (m.boyAttributes || m.girlAttributes) {
+              <div class="card profiles">
+                <h2 class="section-title">{{ i18n.t('motherResult.breakdown.profiles') }}</h2>
+                <div class="profiles__grid">
+                  @for (side of profileSides(m); track side.label) {
+                    <div class="profile">
+                      <div class="profile__name">{{ side.label }}</div>
+                      @if (side.attr) {
+                        <div class="profile__row">
+                          <span class="profile__key">{{ i18n.t('motherResult.profiles.gana') }}</span>
+                          <span class="profile__val">{{ i18n.gana(side.attr.gana) }}</span>
+                        </div>
+                        <div class="profile__row">
+                          <span class="profile__key">{{ i18n.t('motherResult.profiles.lagna') }}</span>
+                          <span class="profile__val">{{ i18n.rashi(side.attr.seventhHouse?.lagnaSign ?? '') }}</span>
+                        </div>
+                        @if (side.attr.seventhHouse; as h) {
+                          <div class="house7">
+                            <div class="house7__title">{{ i18n.t('charts.house7.title') }}</div>
+                            <div class="profile__row">
+                              <span class="profile__key">{{ i18n.t('charts.house7.sign') }}</span>
+                              <span class="profile__val">{{ i18n.rashi(h.sign) }}</span>
+                            </div>
+                            <div class="profile__row">
+                              <span class="profile__key">{{ i18n.t('charts.house7.lord') }}</span>
+                              <span class="profile__val">{{ i18n.graha(h.lord) }}</span>
+                            </div>
+                            @if (h.occupants.length > 0) {
+                              <div class="profile__row profile__row--occ">
+                                <span class="profile__key">{{ i18n.t('charts.house7.occupants') }}</span>
+                                <span class="profile__val">
+                                  @for (o of h.occupants; track o.graha) {
+                                    <span class="occ" [class.occ--malefic]="!o.benefic">{{ i18n.graha(o.graha) }}</span>
+                                  }
+                                </span>
+                              </div>
+                            }
+                            <div class="profile__row">
+                              <span class="profile__key"></span>
+                              <span class="h7pill h7pill--{{ assessTone(h.assessment) }}">
+                                {{ i18n.t('charts.house7.' + h.assessment) }}
+                              </span>
+                            </div>
+                          </div>
+                        } @else {
+                          <div class="profile__row profile__key muted small">
+                            {{ i18n.t('charts.house7.title') }}: —
+                          </div>
+                        }
+                      } @else {
+                        <span class="muted small">—</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
             }
           </div>
         }
@@ -267,6 +325,34 @@ import { ManglikCardComponent } from '../components/manglik-card.component';
       text-align: right;
       color: var(--ink-3);
     }
+
+    .profiles__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 480px) { .profiles__grid { grid-template-columns: 1fr; } }
+    .profile { border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 12px 14px; }
+    .profile__name { font-weight: 600; font-size: 14px; color: var(--ink); margin-bottom: 8px; }
+    .profile__row {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 6px; padding: 3px 0;
+      font-size: 13px;
+    }
+    .profile__key { color: var(--ink-3); flex-shrink: 0; }
+    .profile__val { color: var(--ink); text-align: right; }
+    .profile__row--occ .profile__val { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+    .house7 { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-soft); }
+    .house7__title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+                     color: var(--ink-3); margin-bottom: 4px; }
+    .occ { font-size: 12px; background: var(--surface); border: 1px solid var(--border-soft);
+           border-radius: 4px; padding: 1px 6px; }
+    .occ--malefic { border-color: rgba(224, 85, 79, .4); color: var(--bad); }
+    .h7pill { display: inline-block; font-size: 12px; font-weight: 600;
+              padding: 2px 8px; border-radius: 20px; margin-top: 4px; }
+    .h7pill--good { background: rgba(58, 162, 97, .12); color: var(--good); }
+    .h7pill--warn { background: rgba(179, 134, 28, .12); color: #d9b45e; }
+    .h7pill--bad  { background: rgba(224, 85, 79, .12); color: var(--bad); }
   `],
 })
 export class MotherResultPage implements OnInit {
@@ -373,5 +459,18 @@ export class MotherResultPage implements OnInit {
       .join(this.i18n.lang() === 'hi' ? ', ' : ', ');
     const fromWord = this.i18n.lang() === 'hi' ? ' — ' : ' — from ';
     return `${state}${fromWord}${refs}`;
+  }
+
+  profileSides(m: MatchResponse): { label: string; attr: KundliAttributes | null }[] {
+    return [
+      { label: m.boyLabel ?? 'A', attr: m.boyAttributes },
+      { label: m.girlLabel ?? 'B', attr: m.girlAttributes },
+    ];
+  }
+
+  assessTone(assessment: SeventhHouse['assessment']): 'good' | 'warn' | 'bad' {
+    if (assessment === 'FAVOURABLE') return 'good';
+    if (assessment === 'MIXED') return 'warn';
+    return 'bad';
   }
 }

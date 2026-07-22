@@ -2,6 +2,9 @@ package codes.ashutoshkumar.kundli.api;
 
 import codes.ashutoshkumar.kundli.ashtakoot.AshtakootResult;
 import codes.ashutoshkumar.kundli.ashtakoot.RecommendationCategory;
+import codes.ashutoshkumar.kundli.attributes.KundliAttributes;
+import codes.ashutoshkumar.kundli.attributes.KundliAttributesService;
+import codes.ashutoshkumar.kundli.chart.BirthChart;
 import codes.ashutoshkumar.kundli.chart.BirthChartService;
 import codes.ashutoshkumar.kundli.config.KundliProperties;
 import codes.ashutoshkumar.kundli.manglik.ManglikCompatibility;
@@ -70,18 +73,25 @@ public class MatchController {
             RecommendationCategory recommendation,
             String rulesVersion,
             RuleMetadata ruleMetadata,
-            String createdAt
+            String createdAt,
+            /** Kundli attributes for the boy (Gana, Nadi, Yoni, 7th house …). Null if chart was deleted. */
+            KundliAttributes boyAttributes,
+            /** Kundli attributes for the girl (Gana, Nadi, Yoni, 7th house …). Null if chart was deleted. */
+            KundliAttributes girlAttributes
     ) {}
 
     private final MatchService service;
     private final BirthChartService charts;
+    private final KundliAttributesService attributesService;
     private final ObjectMapper mapper;
     private final KundliProperties props;
 
     public MatchController(MatchService service, BirthChartService charts,
+                           KundliAttributesService attributesService,
                            ObjectMapper mapper, KundliProperties props) {
         this.service = service;
         this.charts = charts;
+        this.attributesService = attributesService;
         this.mapper = mapper;
         this.props = props;
     }
@@ -117,7 +127,9 @@ public class MatchController {
         return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
                 outcome.boy().getLabel(), outcome.girl().getLabel(),
                 outcome.result(), outcome.manglik(), outcome.recommendation(),
-                r.getRulesVersion(), currentMetadata(), r.getCreatedAt());
+                r.getRulesVersion(), currentMetadata(), r.getCreatedAt(),
+                attributesService.derive(outcome.boy()),
+                attributesService.derive(outcome.girl()));
     }
 
     @GetMapping("/{id}")
@@ -132,18 +144,24 @@ public class MatchController {
     }
 
     /**
-     * Re-inflate a stored match into a response. The bride/groom labels are
-     * resolved from their charts here (not persisted on the match) so the
-     * history list and result view show the real names instead of the
-     * generic "A"/"B" fallback the UI renders when a label is {@code null}.
+     * Re-inflate a stored match into a response. The bride/groom labels and Kundli
+     * attributes are resolved from their charts here (not persisted on the match) so
+     * the history list and result view show the real names and attribute data. If a
+     * chart was deleted after the match was stored, labels/attributes gracefully degrade
+     * to null rather than 404-ing the whole list.
      */
     private MatchResponse toResponse(MatchRecord r) {
+        BirthChart boy = charts.findChart(r.getBoyChartId());
+        BirthChart girl = charts.findChart(r.getGirlChartId());
         return new MatchResponse(r.getId(), r.getBoyChartId(), r.getGirlChartId(),
-                charts.findLabel(r.getBoyChartId()), charts.findLabel(r.getGirlChartId()),
+                boy != null ? boy.getLabel() : null,
+                girl != null ? girl.getLabel() : null,
                 parse(r.getResultJson()),
                 parseManglik(r.getManglikJson()),
                 service.categorize(r.getTotalPoints()),
-                r.getRulesVersion(), metadataFor(r), r.getCreatedAt());
+                r.getRulesVersion(), metadataFor(r), r.getCreatedAt(),
+                boy != null ? attributesService.derive(boy) : null,
+                girl != null ? attributesService.derive(girl) : null);
     }
 
     private AshtakootResult parse(String json) {
