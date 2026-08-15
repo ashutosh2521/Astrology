@@ -24,7 +24,14 @@ COMPOSE="infra/docker-compose.yml"
 log() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 
 log "Building images locally"
-docker compose -f "$COMPOSE" build
+# Build with plain `docker build`, NOT `docker compose build`: compose would load the whole
+# model first — including the env_file: /etc/kundli/*.env references, which exist only on the
+# server — and fail here on the workstation. The build itself needs no runtime env files.
+# Image tags below match the image: names in docker-compose.yml, so `docker save` and the
+# server-side `docker compose up` resolve them.
+docker build -f backend/Dockerfile -t kundli-backend:latest .
+docker build -t kundli-ephemeris:latest ephemeris-service
+docker build -t kundli-monitoring:latest monitoring
 
 log "Saving images to $TAR ($(printf '%s ' "${IMAGES[@]}"))"
 docker save "${IMAGES[@]}" | gzip > "$TAR"

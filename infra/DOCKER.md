@@ -71,8 +71,8 @@ are already correct for the container mounts.
 ### 1.3 Swiss Ephemeris data (unchanged, still host-side)
 ```bash
 cd /opt/kundli/ephe
-sudo curl -fLO https://www.astro.com/ftp/swisseph/ephe/sepl_18.se1   # planets
-sudo curl -fLO https://www.astro.com/ftp/swisseph/ephe/semo_18.se1   # moon
+sudo curl -fLO https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/sepl_18.se1   # planets
+sudo curl -fLO https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/semo_18.se1   # moon
 ls -l /opt/kundli/ephe/*.se1
 ```
 Mounted read-only into the ephemeris container. Missing files ⇒ the container's `/health`
