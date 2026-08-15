@@ -9,6 +9,9 @@ venv/
 
 # Swiss Ephemeris data files (downloaded at deploy time, not committed — large binaries)
 ephemeris-service/ephe/*.se1
+# Local smoke-test ephemeris data + saved image bundle (see docker-compose.local.yml)
+/ephe/
+*.tar
 
 # Java / Spring Boot
 target/

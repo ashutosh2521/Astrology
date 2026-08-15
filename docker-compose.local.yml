@@ -1,0 +1,52 @@
+# Local smoke test — run the whole stack on your workstation to verify the images combine
+# and work together BEFORE shipping them to the server. Unlike infra/docker-compose.yml,
+# this file needs no /etc/kundli/*.env and no /opt/kundli paths: every value is inlined and
+# the .se1 data is read from a local ./ephe folder.
+#
+#   1. Put the two .se1 files in ./ephe   (see the download commands in the chat / DOCKER.md)
+#   2. docker compose -f docker-compose.local.yml up -d
+#   3. curl http://localhost:8080/api/health      -> {"app":"UP","ephemeris":"UP"}
+#      open http://localhost:8080 in a browser     -> the Angular app loads
+#   4. docker compose -f docker-compose.local.yml down -v   (tears down + drops the test DB)
+#
+# Uses the already-built images (kundli-*:latest); it never builds.
+
+name: kundli-local
+
+services:
+  ephemeris:
+    image: kundli-ephemeris:latest
+    environment:
+      EPHE_PATH: /opt/kundli/ephe
+    volumes:
+      - ./ephe:/opt/kundli/ephe:ro
+    ports:
+      - "127.0.0.1:8001:8001"     # optional: lets you curl the ephemeris /health directly
+
+  backend:
+    image: kundli-backend:latest
+    depends_on:
+      - ephemeris
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      KUNDLI_EPHEMERIS_BASEURL: http://ephemeris:8001
+      KUNDLI_ADMIN_URL: http://monitoring:9090
+      KUNDLI_DB_PATH: /var/lib/kundli/kundli.db
+    volumes:
+      - kundli-db-local:/var/lib/kundli
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  monitoring:
+    image: kundli-monitoring:latest
+    depends_on:
+      - backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      KUNDLI_ADMIN_USER: admin
+      KUNDLI_ADMIN_PASSWORD: localtest
+    ports:
+      - "127.0.0.1:9090:9090"
+
+volumes:
+  kundli-db-local:
