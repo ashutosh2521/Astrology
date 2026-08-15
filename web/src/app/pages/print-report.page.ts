@@ -388,6 +388,17 @@ interface Bundle {
     .muted { color: #999; }
     .right { text-align: right; }
 
+    /* ---------- Narrow screens (on-screen viewing only; print always A4) ---------- */
+    @media screen and (max-width: 640px) {
+      .pills { grid-template-columns: 1fr 1fr; }
+      .profiles__grid { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; }
+      dl.meta { grid-template-columns: max-content 1fr; }
+    }
+    @media screen and (max-width: 380px) {
+      .pills { grid-template-columns: 1fr; }
+    }
+
     /* ---------- @media print ---------- */
     @media print {
       :host, body { background: white !important; }

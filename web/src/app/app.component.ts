@@ -94,7 +94,8 @@ import { PlatformService } from './core/platform.service';
     .langs button {
       background: none;
       border: none;
-      padding: 7px 13px;
+      min-height: 44px;
+      padding: 7px 15px;
       font: 600 12.5px/1 var(--font-body);
       color: var(--ink-3);
       cursor: pointer;
