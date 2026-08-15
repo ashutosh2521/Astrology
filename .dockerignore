@@ -1,0 +1,10 @@
+# Keep the backend build context (repo root) small and reproducible. Anything the
+# image build regenerates itself must not be copied in from the host.
+.git/
+*.tar
+*.tar.gz
+**/target/
+**/node_modules/
+**/.venv/
+web/dist/
+web/.angular/
