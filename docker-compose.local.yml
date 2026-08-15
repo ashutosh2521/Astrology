@@ -20,8 +20,8 @@ services:
       EPHE_PATH: /opt/kundli/ephe
     volumes:
       - ./ephe:/opt/kundli/ephe:ro
-    ports:
-      - "127.0.0.1:8001:8001"     # optional: lets you curl the ephemeris /health directly
+    # No published port: the backend reaches it over the internal network. Verify ephemeris
+    # health through the backend's /api/health instead (it reports "ephemeris":"UP").
 
   backend:
     image: kundli-backend:latest
