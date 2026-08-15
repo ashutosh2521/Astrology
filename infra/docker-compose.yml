@@ -1,0 +1,65 @@
+# Kundli Matching — containerized deployment (an ALTERNATIVE to the systemd runbook in
+# DEPLOY.md; see DOCKER.md for the full workflow). Three app services on an internal
+# network; only the backend and the monitoring dashboard are published, both on loopback.
+# Nginx + TLS stay on the host and reverse-proxy to 127.0.0.1:8080, unchanged.
+#
+#   Build locally:  docker compose -f infra/docker-compose.yml build
+#   Run on server:  docker compose -f docker-compose.yml up -d --no-build
+#
+# The `build:` sections are used only when building locally. On the server the images are
+# loaded from the shipped tar and `--no-build` guarantees the (absent) build contexts are
+# never touched.
+
+name: kundli
+
+services:
+  ephemeris:
+    image: kundli-ephemeris:latest
+    build:
+      context: ../ephemeris-service
+    env_file: /etc/kundli/ephemeris.env      # EPHE_PATH=/opt/kundli/ephe
+    volumes:
+      # Swiss Ephemeris .se1 data, downloaded on the host, read-only to the service.
+      - /opt/kundli/ephe:/opt/kundli/ephe:ro
+    restart: unless-stopped
+    # No published ports: reachable only by the backend over the internal network.
+
+  backend:
+    image: kundli-backend:latest
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    depends_on:
+      - ephemeris
+    env_file: /etc/kundli/backend.env
+    environment:
+      # Activates application-docker.properties in the jar.
+      SPRING_PROFILES_ACTIVE: docker
+      # Override the loopback URLs from backend.env with compose service names.
+      # (compose `environment` takes precedence over `env_file`.)
+      KUNDLI_EPHEMERIS_BASEURL: http://ephemeris:8001
+      KUNDLI_ADMIN_URL: http://monitoring:9090
+    volumes:
+      # SQLite database persists here across restarts (KUNDLI_DB_PATH=/var/lib/kundli/kundli.db).
+      - kundli-db:/var/lib/kundli
+    ports:
+      # Loopback only; host Nginx terminates TLS and reverse-proxies to this.
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+
+  monitoring:
+    image: kundli-monitoring:latest
+    build:
+      context: ../monitoring
+    depends_on:
+      - backend
+    env_file: /etc/kundli/admin.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      # Loopback only; reached over an SSH tunnel: ssh -L 9090:127.0.0.1:9090 <host>
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+
+volumes:
+  kundli-db:
