@@ -24,7 +24,14 @@ COMPOSE="infra/docker-compose.yml"
 log() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 
 log "Building images locally"
-docker compose -f "$COMPOSE" build
+# Build with plain `docker build`, NOT `docker compose build`: compose would load the whole
+# model first — including the env_file: /etc/kundli/*.env references, which exist only on the
+# server — and fail here on the workstation. The build itself needs no runtime env files.
+# Image tags below match the image: names in docker-compose.yml, so `docker save` and the
+# server-side `docker compose up` resolve them.
+docker build -f backend/Dockerfile -t kundli-backend:latest .
+docker build -t kundli-ephemeris:latest ephemeris-service
+docker build -t kundli-monitoring:latest monitoring
 
 log "Saving images to $TAR ($(printf '%s ' "${IMAGES[@]}"))"
 docker save "${IMAGES[@]}" | gzip > "$TAR"
@@ -44,9 +51,17 @@ ssh "$SSH_TARGET" "cd $REMOTE_DIR \
     && docker compose -f docker-compose.yml up -d --no-build \
     && docker image prune -f"
 
-log "Health check (backend, via the server's loopback)"
-ssh "$SSH_TARGET" 'curl -fsS http://127.0.0.1:8080/api/health && echo' \
-    || { echo "backend health check failed — check: ssh $SSH_TARGET 'docker compose -f $REMOTE_DIR/docker-compose.yml logs --tail=50 backend'"; exit 1; }
+log "Health check — backend may take ~30s to boot (Spring Boot + ephemeris warmup)"
+ok=0
+for i in $(seq 1 20); do
+    if ssh "$SSH_TARGET" 'curl -fsS http://127.0.0.1:8080/api/health >/dev/null 2>&1'; then
+        ssh "$SSH_TARGET" 'curl -fsS http://127.0.0.1:8080/api/health; echo'
+        ok=1; break
+    fi
+    sleep 3
+done
+[[ "$ok" -eq 1 ]] || { echo "backend health check failed after ~60s — inspect logs with:
+  ssh $SSH_TARGET 'cd $REMOTE_DIR && docker compose logs --tail=50 backend ephemeris'"; exit 1; }
 
 rm -f "$TAR"
 log "Deploy complete. Nginx/TLS on the host proxies https://kundli.ashutoshkumar.codes -> 127.0.0.1:8080"

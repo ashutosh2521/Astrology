@@ -49,13 +49,24 @@ sudo dnf install -y nginx certbot python3-certbot-nginx
 ```
 
 ### 1.2 Env files and directories
-Same as [`DEPLOY.md` §1.4](./DEPLOY.md) — the containers read these unchanged:
+
+`DEPLOY_USER` below is the SSH/deploy user that runs `docker` — `ec2-user` on a default
+Amazon Linux 2023 box. Substitute yours if different.
+
 ```bash
+DEPLOY_USER=ec2-user
+
 sudo mkdir -p /etc/kundli /opt/kundli/ephe /opt/kundli/deploy /var/www/certbot
 sudo git clone https://github.com/ashutosh2521/astrology.git /opt/kundli/src   # for the env examples
 sudo cp /opt/kundli/src/infra/env/backend.env.example   /etc/kundli/backend.env
 sudo cp /opt/kundli/src/infra/env/ephemeris.env.example /etc/kundli/ephemeris.env
 sudo cp /opt/kundli/src/infra/env/admin.env.example     /etc/kundli/admin.env
+
+# The deploy script (run as DEPLOY_USER) writes the image bundle here and reads the env
+# files when it runs `docker compose up`. compose reads env_file CLIENT-SIDE as that user,
+# NOT as the docker daemon — so both must be owned/readable by DEPLOY_USER, or `up` fails
+# with "permission denied". 640 owned by DEPLOY_USER keeps the secrets off other users.
+sudo chown "$DEPLOY_USER":"$DEPLOY_USER" /opt/kundli/deploy /etc/kundli/*.env
 sudo chmod 640 /etc/kundli/*.env
 ```
 Set a strong `KUNDLI_ADMIN_PASSWORD` in `admin.env` (and SMTP details if you want email
@@ -63,16 +74,16 @@ alerts). Leave `backend.env` / `ephemeris.env` defaults as-is — the compose fi
 the inter-service URLs; `EPHE_PATH=/opt/kundli/ephe` and `KUNDLI_DB_PATH=/var/lib/kundli/kundli.db`
 are already correct for the container mounts.
 
-> The env files must be readable by the docker daemon at `up` time. `640 root:root` is fine
-> since the deploy loads them via the daemon (root). If you run compose as a non-root user
-> and hit a permissions error reading them, `sudo chmod 644 /etc/kundli/*.env` (they hold a
-> dashboard password + SMTP creds, so prefer keeping the host locked down over widening this).
+> **SELinux (Amazon Linux 2023):** the `.se1` bind mount is read-only. If the ephemeris
+> container can't read it and its `/health` stays 503 with SELinux `denied` messages in
+> `sudo dmesg`, relabel by changing the volume line to `/opt/kundli/ephe:/opt/kundli/ephe:ro,z`
+> in `docker-compose.yml`. Not needed when SELinux is permissive (the AL2023 default).
 
 ### 1.3 Swiss Ephemeris data (unchanged, still host-side)
 ```bash
 cd /opt/kundli/ephe
-sudo curl -fLO https://www.astro.com/ftp/swisseph/ephe/sepl_18.se1   # planets
-sudo curl -fLO https://www.astro.com/ftp/swisseph/ephe/semo_18.se1   # moon
+sudo curl -fLO https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/sepl_18.se1   # planets
+sudo curl -fLO https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/semo_18.se1   # moon
 ls -l /opt/kundli/ephe/*.se1
 ```
 Mounted read-only into the ephemeris container. Missing files ⇒ the container's `/health`

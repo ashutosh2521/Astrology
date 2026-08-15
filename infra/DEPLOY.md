@@ -58,11 +58,12 @@ The `.se1` files are **not** in the repo (large binaries; AGPL data downloaded a
 time). Without them the ephemeris service **refuses to start** — that is the intended
 "no silent Moshier fallback" guard, not a bug.
 
-Download the main planetary files from Astrodienst into `/opt/kundli/ephe`:
+Download the main planetary files from the official Swiss Ephemeris data mirror into
+`/opt/kundli/ephe`:
 ```bash
 cd /opt/kundli/ephe
-sudo -u kundli curl -fLO https://www.astro.com/ftp/swisseph/ephe/sepl_18.se1  # planets
-sudo -u kundli curl -fLO https://www.astro.com/ftp/swisseph/ephe/semo_18.se1  # moon
+sudo -u kundli curl -fLO https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/sepl_18.se1  # planets
+sudo -u kundli curl -fLO https://raw.githubusercontent.com/aloistr/swisseph/master/ephe/semo_18.se1  # moon
 # Add other date-range files if you support births outside the sepl_18/semo_18 window.
 ls -l /opt/kundli/ephe/*.se1
 ```
