@@ -51,9 +51,17 @@ ssh "$SSH_TARGET" "cd $REMOTE_DIR \
     && docker compose -f docker-compose.yml up -d --no-build \
     && docker image prune -f"
 
-log "Health check (backend, via the server's loopback)"
-ssh "$SSH_TARGET" 'curl -fsS http://127.0.0.1:8080/api/health && echo' \
-    || { echo "backend health check failed — check: ssh $SSH_TARGET 'docker compose -f $REMOTE_DIR/docker-compose.yml logs --tail=50 backend'"; exit 1; }
+log "Health check — backend may take ~30s to boot (Spring Boot + ephemeris warmup)"
+ok=0
+for i in $(seq 1 20); do
+    if ssh "$SSH_TARGET" 'curl -fsS http://127.0.0.1:8080/api/health >/dev/null 2>&1'; then
+        ssh "$SSH_TARGET" 'curl -fsS http://127.0.0.1:8080/api/health; echo'
+        ok=1; break
+    fi
+    sleep 3
+done
+[[ "$ok" -eq 1 ]] || { echo "backend health check failed after ~60s — inspect logs with:
+  ssh $SSH_TARGET 'cd $REMOTE_DIR && docker compose logs --tail=50 backend ephemeris'"; exit 1; }
 
 rm -f "$TAR"
 log "Deploy complete. Nginx/TLS on the host proxies https://kundli.ashutoshkumar.codes -> 127.0.0.1:8080"
